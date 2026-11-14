@@ -68,7 +68,9 @@ async def telegram_check() -> int:
     if not chats:
         print(f"\nNo chats yet. Open https://t.me/{me['result']['username']} and send /start,\n"
               "or add the bot to a group and send a message there. Then run this again.\n"
-              "(Telegram only keeps recent updates, about 24 h.)")
+              "(Telegram only keeps recent updates, about 24 h.)\n"
+              "If the backend is running with this token, it consumes the updates itself:\n"
+              "send /start to the bot instead, and it replies with the chat ID.")
         return 0
     print("\nChats that talked to the bot:")
     for cid, chat in chats.items():

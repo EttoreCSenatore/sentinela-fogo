@@ -61,6 +61,8 @@ SENTINELA_TELEGRAM_BOT_TOKEN=1234567890:AAH...
 
 **4. Find the chat ID and register the recipient** (from `backend/`)
 
+If the backend is already running with the token, the bot answers `/start` with the chat ID. Otherwise use the CLI:
+
 ```bash
 .venv/bin/python -m app.cli telegram-check
 #   Bot OK: @sentinela_fogo_alertas_bot
@@ -90,6 +92,19 @@ docker compose -f infra/docker-compose.yml up -d backend    # Docker stack
 ```
 
 (or restart `uvicorn` if you run it from source).
+
+### Bot commands
+
+While the backend runs, the bot answers in any chat:
+
+| Command | Reply |
+|---|---|
+| `/start` | The chat ID, and whether this chat already receives alerts |
+| `/status` | Current FMA+ fire-danger level for each monitored area |
+| `/ajuda` | List of commands |
+
+The bot never subscribes anyone by itself: an admin adds recipients with `add-telegram`. Telegram allows only one
+program to read a bot's messages at a time, so while the backend runs, `telegram-check` won't list new chats.
 
 ## Channels
 

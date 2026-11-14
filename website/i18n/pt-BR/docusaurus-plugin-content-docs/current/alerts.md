@@ -61,6 +61,8 @@ SENTINELA_TELEGRAM_BOT_TOKEN=1234567890:AAH...
 
 **4. Descubra o chat ID e cadastre o destinatário** (a partir de `backend/`)
 
+Se o backend já estiver rodando com o token, o bot responde ao `/start` com o chat ID. Caso contrário, use a CLI:
+
 ```bash
 .venv/bin/python -m app.cli telegram-check
 #   Bot OK: @sentinela_fogo_alertas_bot
@@ -90,6 +92,20 @@ docker compose -f infra/docker-compose.yml up -d backend    # stack Docker
 ```
 
 (ou reinicie o `uvicorn`, se estiver rodando a partir do código).
+
+### Comandos do bot
+
+Enquanto o backend estiver rodando, o bot responde em qualquer chat:
+
+| Comando | Resposta |
+|---|---|
+| `/start` | O chat ID e se este chat já recebe alertas |
+| `/status` | Nível atual de perigo de incêndio (FMA+) em cada área monitorada |
+| `/ajuda` | Lista de comandos |
+
+O bot nunca cadastra ninguém sozinho: um administrador adiciona os destinatários com `add-telegram`. O Telegram
+permite que apenas um programa leia as mensagens de um bot por vez, então, com o backend rodando, o `telegram-check`
+não lista chats novos.
 
 ## Canais
 

@@ -7,6 +7,7 @@ os.environ["SENTINELA_DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
 os.environ["SENTINELA_MQTT_ENABLED"] = "false"
 os.environ["SENTINELA_INPE_ENABLED"] = "false"
 os.environ["SENTINELA_WEATHER_ENABLED"] = "false"
+os.environ["SENTINELA_TELEGRAM_BOT_ENABLED"] = "false"
 os.environ["SENTINELA_SITES_FILE"] = "/nonexistent/sites.json"
 os.environ["SENTINELA_RECIPIENTS_FILE"] = "/nonexistent/recipients.json"
 os.environ.pop("SENTINELA_TELEGRAM_BOT_TOKEN", None)

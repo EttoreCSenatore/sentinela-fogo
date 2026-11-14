@@ -35,6 +35,9 @@ async def lifespan(_app: FastAPI):
     if settings.weather_enabled:
         from app.ingest import weather
         tasks.append(asyncio.create_task(weather.poll_forever()))
+    if settings.telegram_bot_enabled and settings.telegram_bot_token:
+        from app.alerts import telegram_bot
+        tasks.append(asyncio.create_task(telegram_bot.poll_forever()))
     yield
     for t in tasks:
         t.cancel()

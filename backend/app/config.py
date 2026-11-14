@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     # Alerts
     telegram_bot_token: str | None = None
     telegram_chat_id: str | None = None  # fallback recipient when recipients_file is absent
+    telegram_bot_enabled: bool = True  # answer /start, /status, /ajuda (needs telegram_bot_token)
     # WhatsApp Cloud API (Meta). Business-initiated messages need an approved template in production.
     whatsapp_token: str | None = None
     whatsapp_phone_number_id: str | None = None
