@@ -11,7 +11,7 @@ casa ou um mini-PC na fazenda.
 ```text
 infra/docker-compose.yml
   mosquitto   :1883   broker autenticado, com ACL por nó
-  backend     (interno) FastAPI, SQLite em volume nomeado
+  backend     (interno) FastAPI, SQLite em volume nomeado, backend/config montado só para leitura
   dashboard   :8080   nginx, servindo o build do React e encaminhando /api para o backend
 ```
 
@@ -27,12 +27,25 @@ docker compose -f infra/docker-compose.yml up -d --build
 
 Acesse `http://<servidor>:8080`.
 
+## Teste com nós simulados
+
+```bash
+PASSWORD=devpass infra/provision.sh node cerrado-000 pantanal-001 amazonia-002
+backend/.venv/bin/python simulator/simulate.py --nodes 3 --password devpass --fire-at 4
+```
+
+Cada nó simulado se autentica como ele mesmo, exatamente como um hardware real. O nó 0 "pega fogo" após 4 ciclos, e
+um alerta `fire` aparece no painel. Use `--cycles N` para parar após N rodadas.
+
 ## Segurança do MQTT
 
 - `allow_anonymous false`. Cada nó se autentica com **usuário = node_id**.
 - A ACL (`infra/mosquitto/acl`) só permite que um nó publique em `sentinela/v1/nodes/<seu próprio id>/...`, e
   apenas o usuário `sentinela-backend` pode ler.
 - Antes de expor o broker à internet, adicione um listener TLS na porta 8883 (certificado Let's Encrypt) e feche a 1883.
+- O `infra/mosquitto/passwd` contém apenas hashes com salt e pode ser lido por todos, para que o broker (uid 1883 no
+  contêiner) consiga lê-lo. Em servidor, restrinja o acesso: `sudo chown 1883:1883 infra/mosquitto/passwd && sudo chmod 600 infra/mosquitto/passwd`
+  (depois disso, o `provision.sh` precisa de `sudo`).
 
 ## Checklist de produção
 

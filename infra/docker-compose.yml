@@ -19,6 +19,8 @@ services:
       SENTINELA_MQTT_USERNAME: sentinela-backend
     volumes:
       - backend-data:/data
+      # sites.json + recipients.json (git-ignored, personal data) are edited on the host, never baked into the image.
+      - ../backend/config:/app/config:ro
     depends_on: [mosquitto]
     restart: unless-stopped
 

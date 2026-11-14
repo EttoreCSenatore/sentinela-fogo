@@ -17,6 +17,7 @@ from app.events import bus
 from app.schemas import AlertOut, DangerOut, HotspotOut, NodeOut, OverviewNode, ReadingOut, Telemetry
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logging.getLogger("httpx").setLevel(logging.WARNING)  # one line per INPE/Open-Meteo request is noise
 
 
 @asynccontextmanager

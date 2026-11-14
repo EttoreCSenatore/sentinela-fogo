@@ -1,6 +1,7 @@
 """Simulate sensor nodes in Brazilian biomes and publish telemetry over MQTT.
 
     python simulator/simulate.py --nodes 5 --interval 2 --fire-at 3
+    python simulator/simulate.py --nodes 3 --password devpass   # authenticated broker
 
 --fire-at N  starts a simulated fire at node 0 after N cycles (smoke/temp rise, RH drop, flame).
 Uses aiomqtt from the backend venv.
@@ -58,22 +59,32 @@ async def main():
     ap.add_argument("--nodes", type=int, default=5)
     ap.add_argument("--interval", type=float, default=2.0)
     ap.add_argument("--fire-at", type=int, default=None, help="cycle at which node 0 catches fire")
+    ap.add_argument("--password", default=None,
+                    help="MQTT password shared by all simulated nodes (username = node id), for the authenticated broker")
+    ap.add_argument("--cycles", type=int, default=None, help="stop after N cycles (default: run forever)")
     args = ap.parse_args()
 
     nodes = make_nodes(args.nodes)
-    cycle = 0
-    async with aiomqtt.Client(args.host, args.port) as client:
-        while True:
-            for i, node in enumerate(nodes):
+    if args.password:
+        print("node ids (provision these with infra/provision.sh node ...):", " ".join(n["id"] for n in nodes))
+
+    async def run_node(i: int, node: dict) -> None:
+        # One connection per node: with the authenticated broker each node logs in as itself.
+        creds = {"username": node["id"], "password": args.password} if args.password else {}
+        async with aiomqtt.Client(args.host, args.port, identifier=node["id"], **creds) as client:
+            cycle = 0
+            while args.cycles is None or cycle < args.cycles:
                 fire = 0.0
                 if args.fire_at is not None and i == 0 and cycle >= args.fire_at:
                     fire = min(1.0, (cycle - args.fire_at + 1) / 3)
-                payload = sample(node, fire)
                 topic = f"sentinela/v1/nodes/{node['id']}/telemetry"
-                await client.publish(topic, json.dumps(payload), qos=1)
-            print(f"{datetime.now(timezone.utc):%H:%M:%S} cycle {cycle}: published {len(nodes)} readings")
-            cycle += 1
-            await asyncio.sleep(args.interval)
+                await client.publish(topic, json.dumps(sample(node, fire)), qos=1)
+                if i == 0:
+                    print(f"{datetime.now(timezone.utc):%H:%M:%S} cycle {cycle}: published {len(nodes)} readings")
+                cycle += 1
+                await asyncio.sleep(args.interval)
+
+    await asyncio.gather(*(run_node(i, n) for i, n in enumerate(nodes)))
 
 
 if __name__ == "__main__":

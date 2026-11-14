@@ -11,7 +11,7 @@ mini-PC on a farm.
 ```text
 infra/docker-compose.yml
   mosquitto   :1883   authenticated broker with per-node ACLs
-  backend     (internal) FastAPI, SQLite in a named volume
+  backend     (internal) FastAPI, SQLite in a named volume, backend/config mounted read-only
   dashboard   :8080   nginx, serving the React build and proxying /api to the backend
 ```
 
@@ -27,12 +27,25 @@ docker compose -f infra/docker-compose.yml up -d --build
 
 Open `http://<server>:8080`.
 
+## Test with simulated nodes
+
+```bash
+PASSWORD=devpass infra/provision.sh node cerrado-000 pantanal-001 amazonia-002
+backend/.venv/bin/python simulator/simulate.py --nodes 3 --password devpass --fire-at 4
+```
+
+Each simulated node logs in as itself, exactly like real hardware would. Node 0 "catches fire" after 4 cycles, and a
+`fire` alert appears on the dashboard. Use `--cycles N` to stop after N rounds.
+
 ## MQTT security
 
 - `allow_anonymous false`. Every node logs in with **username = node_id**.
 - The ACL (`infra/mosquitto/acl`) only lets a node publish to `sentinela/v1/nodes/<its own id>/...`, and only
   the `sentinela-backend` user can read.
 - Before exposing the broker to the internet, add a TLS listener on 8883 (Let's Encrypt certificate) and close 1883.
+- `infra/mosquitto/passwd` holds only salted hashes and is world-readable so the broker (uid 1883 in the container)
+  can read it. On a server, restrict it: `sudo chown 1883:1883 infra/mosquitto/passwd && sudo chmod 600 infra/mosquitto/passwd`
+  (after that, `provision.sh` needs `sudo`).
 
 ## Production checklist
 

@@ -7,9 +7,15 @@ set -euo pipefail
 cd "$(dirname "$0")"
 PASSWD=mosquitto/passwd
 touch "$PASSWD"
+# The broker runs as uid 1883 inside the container and must be able to read this file. It only holds salted
+# hashes. On a server, lock it down instead: sudo chown 1883:1883 infra/mosquitto/passwd && sudo chmod 600 ...
+chmod 644 "$PASSWD"
 
 set_user() {  # user password
-  docker run --rm -v "$PWD/mosquitto:/m" eclipse-mosquitto:2 mosquitto_passwd -b /m/passwd "$1" "$2"
+  # mosquitto_passwd prints ownership/permission warnings for a host-owned file; only show real failures.
+  if ! out=$(docker run --rm -v "$PWD/mosquitto:/m" eclipse-mosquitto:2 mosquitto_passwd -b /m/passwd "$1" "$2" 2>&1); then
+    echo "$out" >&2; exit 1
+  fi
 }
 gen() { echo "${PASSWORD:-$(head -c 18 /dev/urandom | base64 | tr -d '/+=')}"; }
 
