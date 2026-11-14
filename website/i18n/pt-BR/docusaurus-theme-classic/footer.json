@@ -1,0 +1,26 @@
+{
+  "link.title.Data": {
+    "message": "Dados",
+    "description": "The title of the footer links column with title=Data in the footer"
+  },
+  "link.title.Project": {
+    "message": "Projeto",
+    "description": "The title of the footer links column with title=Project in the footer"
+  },
+  "link.item.label.INPE BDQueimadas": {
+    "message": "INPE BDQueimadas",
+    "description": "The label of footer link with label=INPE BDQueimadas linking to https://terrabrasilis.dpi.inpe.br/queimadas/bdqueimadas/"
+  },
+  "link.item.label.Open-Meteo": {
+    "message": "Open-Meteo",
+    "description": "The label of footer link with label=Open-Meteo linking to https://open-meteo.com/"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/EttoreCSenatore/sentinela-fogo"
+  },
+  "copyright": {
+    "message": "Sentinela do Fogo · 2026",
+    "description": "The footer copyright"
+  }
+}

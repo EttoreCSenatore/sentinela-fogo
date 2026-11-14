@@ -1,0 +1,9 @@
+{
+  "_comment": "Pilot sites monitored as virtual stations (weather from Open-Meteo + INPE hotspots). Coordinates are approximate area centres; refine before relying on them.",
+  "sites": [
+    {"id": "chapada-veadeiros", "name": "Chapada dos Veadeiros (GO)", "biome": "cerrado",  "lat": -14.07, "lon": -47.68, "radius_km": 20},
+    {"id": "pantanal-pocone",   "name": "Pantanal - Transpantaneira, Poconé (MT)", "biome": "pantanal", "lat": -16.75, "lon": -56.75, "radius_km": 25},
+    {"id": "novo-progresso",    "name": "Novo Progresso (PA) - arco do desmatamento", "biome": "amazonia", "lat": -7.04, "lon": -55.42, "radius_km": 25},
+    {"id": "chapada-diamantina","name": "Chapada Diamantina (BA)", "biome": "caatinga", "lat": -12.60, "lon": -41.40, "radius_km": 20}
+  ]
+}

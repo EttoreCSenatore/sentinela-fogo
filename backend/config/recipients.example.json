@@ -1,0 +1,8 @@
+{
+  "_comment": "Copy to config/recipients.json (git-ignored: contains personal data). sites: list of site/node ids or \"*\". kinds: fire (sensor detection), hotspot (INPE focus near a site), danger (daily FMA+ alta/muito alta).",
+  "recipients": [
+    {"name": "Coordenação", "channels": {"telegram": "123456789"}, "sites": ["*"], "kinds": ["fire", "hotspot", "danger"]},
+    {"name": "Brigada Chapada", "channels": {"whatsapp": "+5562999990000", "sms": "+5562999990000"}, "sites": ["chapada-veadeiros"], "kinds": ["fire", "hotspot"]},
+    {"name": "Defesa Civil GO", "channels": {"webhook": "https://example.org/hooks/sentinela"}, "sites": ["chapada-veadeiros"], "kinds": ["fire"]}
+  ]
+}

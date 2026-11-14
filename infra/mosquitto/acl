@@ -1,0 +1,8 @@
+# Backend: read all node traffic.
+user sentinela-backend
+topic read sentinela/v1/nodes/+/telemetry
+topic read sentinela/v1/nodes/+/status
+
+# Every node (username = node_id) may only publish under its own id.
+pattern write sentinela/v1/nodes/%u/telemetry
+pattern write sentinela/v1/nodes/%u/status
