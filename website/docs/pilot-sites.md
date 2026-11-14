@@ -19,6 +19,10 @@ The first four sites are in fire-prone areas across different biomes:
 
 Coordinates are approximate area centres. Refine them before relying on them.
 
+Pilot areas are listed in the dashboard side panel with today's INPE class, the FMA+ value and the next three days:
+
+![Pilot areas in the dashboard](@site/static/img/screenshots/dashboard-areas.png)
+
 ## Adding a site
 
 Edit `backend/config/sites.json` and restart the backend:

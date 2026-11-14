@@ -53,6 +53,10 @@ follows the same drying and wetting cycles (rank correlation 0.75) but is about 
 spells, and resets too abruptly after a single heavy rain. See [Validation](validation.md).
 :::
 
+The dashboard shows both indices side by side for every monitored area, with a three-day outlook:
+
+![Monitored areas with INPE risk and FMA+ values](@site/static/img/screenshots/dashboard-areas.png)
+
 ## Danger alerts: INPE first, FMA+ alongside
 
 Each monitored area also gets **INPE's official Risco de Fogo**: the observed value and INPE's forecast for today

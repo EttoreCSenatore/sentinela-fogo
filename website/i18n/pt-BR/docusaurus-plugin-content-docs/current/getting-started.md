@@ -33,6 +33,14 @@ npm install
 npm run dev        # http://localhost:5174, encaminha /api para :8100
 ```
 
+Clicar em um sensor mostra a leitura mais recente e o score de detecção:
+
+![Popup do sensor com temperatura, umidade, fumaça, chama e FMA+](@site/static/img/screenshots/dashboard-node-popup.png)
+
+O painel é responsivo e funciona no celular:
+
+![Painel no celular](@site/static/img/screenshots/dashboard-mobile.png)
+
 ## 3. (Opcional) Sensores simulados via MQTT
 
 ```bash

@@ -5,6 +5,10 @@ title: Alerts
 
 # Alerts
 
+A detected fire appears on the dashboard map and in the alert list at the same time it is sent to recipients:
+
+![A fire alert in the dashboard side panel](@site/static/img/screenshots/dashboard-node-popup.png)
+
 ## Alert kinds
 
 | Kind | Trigger | Cooldown |

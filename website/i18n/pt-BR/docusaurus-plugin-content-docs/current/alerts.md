@@ -5,6 +5,10 @@ title: Alertas
 
 # Alertas
 
+Um incêndio detectado aparece no mapa do painel e na lista de alertas ao mesmo tempo em que é enviado aos destinatários:
+
+![Um alerta de incêndio no painel lateral](@site/static/img/screenshots/dashboard-node-popup.png)
+
 ## Tipos de alerta
 
 | Tipo | Gatilho | Intervalo mínimo |
