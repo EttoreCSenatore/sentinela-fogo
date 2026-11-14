@@ -8,7 +8,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'System',
       collapsed: false,
-      items: ['architecture', 'risk-model', 'data-sources', 'pilot-sites', 'alerts'],
+      items: ['architecture', 'risk-model', 'validation', 'data-sources', 'pilot-sites', 'alerts'],
     },
     {
       type: 'category',

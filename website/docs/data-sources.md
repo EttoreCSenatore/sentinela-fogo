@@ -27,12 +27,19 @@ Everything we use is free and open.
   free API is for **non-commercial use**, and the data is CC BY 4.0, so credit it if you publish results.
 - **Code:** `backend/app/ingest/weather.py`
 
+## INPE Risco de Fogo: official fire risk (validation)
+
+- **What:** INPE's daily fire-risk index (0–1, five classes), on a grid of about 1 km.
+- **Feed:** `https://dataserver-coids.inpe.br/queimadas/queimadas/riscofogo_meteorologia/observado/risco_fogo/`
+  (one NetCDF file per day, ~12.5 MB, current year). There's also a 0–3-day forecast in `.../previsto/risco_fogo/` (GeoTIFF).
+- **Used for:** checking our FMA+ ([Validation](validation.md)). Using it as a live danger input is on the roadmap.
+- **Code:** `backend/app/validation/inpe_risk.py`
+
 ## Candidates to add
 
 | Source | Why |
 |---|---|
 | INMET automatic weather stations | Real measurements for validating Open-Meteo values |
-| INPE *Risco de Fogo* | INPE's official fire-risk forecast, to compare with our FMA+ |
 | IBGE biome and state boundaries | Accurate Brazil filtering and per-biome statistics |
 | ICMBio conservation units (UCs) | Monitor protected areas automatically |
 | NASA FIRMS (VIIRS 375 m) | Sharper hotspots (needs a free map key) |

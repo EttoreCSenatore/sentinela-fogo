@@ -13,7 +13,8 @@ from app.config import settings
 from app.events import bus
 from app.db import Alert, Hotspot, Node, Reading
 from app.risk.detect import haversine_km, score_reading
-from app.risk.fma import DayObs, danger_class, fma_plus
+from app.risk.fma import daily_observations, danger_class, fma_plus
+from app.sites import site_timezone
 from app.schemas import Telemetry
 
 HISTORY_SIZE = 12
@@ -144,23 +145,12 @@ async def check_danger(db: Session, node: Node, now: datetime | None = None) -> 
 
 def node_danger(db: Session, node_id: str, days: int = 30) -> tuple[float, str, int]:
     """FMA+ from the node's own readings: the reading closest to 13h local time, plus daily rain."""
-    tz = ZoneInfo(settings.timezone)
+    tz = ZoneInfo(site_timezone(node_id))
     since = datetime.now(timezone.utc) - timedelta(days=days)
-    rows = db.scalars(
-        select(Reading).where(Reading.node_id == node_id, Reading.ts >= since).order_by(Reading.ts)
+    rows = db.execute(
+        select(Reading.ts, Reading.humidity_pct, Reading.wind_ms, Reading.rain_mm)
+        .where(Reading.node_id == node_id, Reading.ts >= since).order_by(Reading.ts)
     ).all()
-
-    by_day: dict = defaultdict(list)
-    for r in rows:
-        by_day[_as_utc(r.ts).astimezone(tz).date()].append(r)
-
-    obs = []
-    for day in sorted(by_day):
-        rs = by_day[day]
-        noon = min(rs, key=lambda r: abs(_as_utc(r.ts).astimezone(tz).hour * 60
-                                         + _as_utc(r.ts).astimezone(tz).minute - 13 * 60))
-        rain = sum(r.rain_mm or 0.0 for r in rs)
-        obs.append(DayObs(humidity_13h=noon.humidity_pct, wind_13h=noon.wind_ms or 0.0, rain_mm=rain))
-
+    obs = [o for _, o in daily_observations(((_as_utc(ts), rh, w, r) for ts, rh, w, r in rows), tz)]
     value = fma_plus(obs)
     return value, danger_class(value), len(obs)

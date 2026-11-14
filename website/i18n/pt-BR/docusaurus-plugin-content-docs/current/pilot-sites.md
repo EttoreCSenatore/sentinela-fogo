@@ -24,7 +24,8 @@ As coordenadas são centros aproximados das áreas. Ajuste-as antes de depender 
 Edite `backend/config/sites.json` e reinicie o backend:
 
 ```json
-{"id": "jalapao", "name": "Jalapão (TO)", "biome": "cerrado", "lat": -10.40, "lon": -46.60, "radius_km": 25}
+{"id": "jalapao", "name": "Jalapão (TO)", "biome": "cerrado", "lat": -10.40, "lon": -46.60, "radius_km": 25, "timezone": "America/Araguaina"}
 ```
 
-O `id` deve ser único e pode conter apenas letras, números, `-` e `_`. Na próxima inicialização, o backend busca 30 dias de clima para a nova área.
+O `id` deve ser único e pode conter apenas letras, números, `-` e `_`. O `timezone` é o horário legal
+local da área (nome IANA), usado na leitura das 13h da FMA+; o padrão é `America/Sao_Paulo`. Na próxima inicialização, o backend busca 30 dias de clima para a nova área.

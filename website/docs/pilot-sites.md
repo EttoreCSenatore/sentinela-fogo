@@ -24,7 +24,8 @@ Coordinates are approximate area centres. Refine them before relying on them.
 Edit `backend/config/sites.json` and restart the backend:
 
 ```json
-{"id": "jalapao", "name": "Jalapão (TO)", "biome": "cerrado", "lat": -10.40, "lon": -46.60, "radius_km": 25}
+{"id": "jalapao", "name": "Jalapão (TO)", "biome": "cerrado", "lat": -10.40, "lon": -46.60, "radius_km": 25, "timezone": "America/Araguaina"}
 ```
 
-`id` must be unique and may only contain letters, numbers, `-` and `_`. On the next start, the backend fetches 30 days of weather for the new site.
+`id` must be unique and may only contain letters, numbers, `-` and `_`. `timezone` is the area's local
+legal time (IANA name), used for FMA+'s 13:00 reading; it defaults to `America/Sao_Paulo`. On the next start, the backend fetches 30 days of weather for the new site.

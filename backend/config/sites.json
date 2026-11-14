@@ -1,9 +1,9 @@
 {
-  "_comment": "Pilot sites monitored as virtual stations (weather from Open-Meteo + INPE hotspots). Coordinates are approximate area centres; refine before relying on them.",
+  "_comment": "Pilot sites monitored as virtual stations (weather from Open-Meteo + INPE hotspots). Coordinates are approximate area centres; refine before relying on them. timezone = local legal time, used for the FMA+ 13:00 reading.",
   "sites": [
-    {"id": "chapada-veadeiros", "name": "Chapada dos Veadeiros (GO)", "biome": "cerrado",  "lat": -14.07, "lon": -47.68, "radius_km": 20},
-    {"id": "pantanal-pocone",   "name": "Pantanal - Transpantaneira, Poconé (MT)", "biome": "pantanal", "lat": -16.75, "lon": -56.75, "radius_km": 25},
-    {"id": "novo-progresso",    "name": "Novo Progresso (PA) - arco do desmatamento", "biome": "amazonia", "lat": -7.04, "lon": -55.42, "radius_km": 25},
-    {"id": "chapada-diamantina","name": "Chapada Diamantina (BA)", "biome": "caatinga", "lat": -12.60, "lon": -41.40, "radius_km": 20}
+    {"id": "chapada-veadeiros", "name": "Chapada dos Veadeiros (GO)", "biome": "cerrado", "lat": -14.07, "lon": -47.68, "radius_km": 20, "timezone": "America/Sao_Paulo"},
+    {"id": "pantanal-pocone", "name": "Pantanal - Transpantaneira, Poconé (MT)", "biome": "pantanal", "lat": -16.75, "lon": -56.75, "radius_km": 25, "timezone": "America/Cuiaba"},
+    {"id": "novo-progresso", "name": "Novo Progresso (PA) - arco do desmatamento", "biome": "amazonia", "lat": -7.04, "lon": -55.42, "radius_km": 25, "timezone": "America/Santarem"},
+    {"id": "chapada-diamantina", "name": "Chapada Diamantina (BA)", "biome": "caatinga", "lat": -12.6, "lon": -41.4, "radius_km": 20, "timezone": "America/Bahia"}
   ]
 }

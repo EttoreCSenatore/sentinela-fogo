@@ -10,6 +10,12 @@ from app.config import settings
 from app.db import Node
 
 log = logging.getLogger(__name__)
+_TIMEZONES: dict[str, str] = {}
+
+
+def site_timezone(node_id: str) -> str:
+    """IANA timezone for a site's 13:00 reading (FMA+ uses local clock time); default for sensors."""
+    return _TIMEZONES.get(node_id, settings.timezone)
 
 
 def load_sites(path: str | None = None) -> list[dict]:
@@ -27,6 +33,7 @@ def sync_sites(db: Session, sites: list[dict] | None = None) -> list[Node]:
         node = db.get(Node, s["id"]) or Node(id=s["id"], kind="virtual")
         node.name, node.lat, node.lon = s.get("name"), s["lat"], s["lon"]
         node.biome, node.radius_km, node.kind = s.get("biome"), s.get("radius_km"), "virtual"
+        _TIMEZONES[s["id"]] = s.get("timezone", settings.timezone)
         db.add(node)
         nodes.append(node)
     db.commit()

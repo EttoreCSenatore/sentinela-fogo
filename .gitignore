@@ -14,3 +14,4 @@ infra/mosquitto/passwd
 backend/config/recipients.json
 .docusaurus/
 website/build/
+backend/data/

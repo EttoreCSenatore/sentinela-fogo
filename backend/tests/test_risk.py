@@ -3,7 +3,7 @@ import math
 import pytest
 
 from app.risk.detect import haversine_km, score_reading
-from app.risk.fma import DayObs, danger_class, fma_plus, rain_factor
+from app.risk.fma import DayObs, daily_observations, danger_class, fma_plus, fma_series, rain_factor
 
 
 def test_fma_plus_accumulates_dry_days():
@@ -59,3 +59,21 @@ def test_hotspot_corroboration_and_cap():
 def test_smoke_needs_baseline():
     d = score_reading(temp_c=28, humidity_pct=40, smoke_ppm=999, flame=False, history=CALM[:1], **BASE)
     assert d.score == 0
+
+
+def test_fma_series_running_values_and_reset():
+    days = [DayObs(20), DayObs(20), DayObs(50, rain_mm=20), DayObs(50)]
+    assert fma_series(days) == pytest.approx([5.0, 10.0, 0.0, 2.0])
+
+
+def test_daily_observations_uses_site_local_13h():
+    from datetime import datetime, timedelta, timezone
+    from zoneinfo import ZoneInfo
+    # Hourly points for one day, RH = UTC hour so we can see which hour was picked.
+    start = datetime(2026, 11, 10, 3, tzinfo=timezone.utc)
+    pts = [(start + timedelta(hours=h), float((3 + h) % 24), 1.0, 0.5) for h in range(24)]
+    [(_, sp)] = [x for x in daily_observations(pts, ZoneInfo("America/Sao_Paulo")) if x[0].day == 10]
+    [(_, cb)] = [x for x in daily_observations(pts, ZoneInfo("America/Cuiaba")) if x[0].day == 10]
+    assert sp.humidity_13h == 16  # 13:00 UTC-3 = 16 UTC
+    assert cb.humidity_13h == 17  # 13:00 UTC-4 = 17 UTC (was wrongly 16 before)
+    assert sp.rain_mm == pytest.approx(0.5 * 24)  # 03 UTC on the 10th .. 02 UTC on the 11th = whole local day

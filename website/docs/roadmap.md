@@ -15,7 +15,9 @@ title: Roadmap
 - [x] Bilingual docs (en / pt-BR)
 
 ## Phase 1: Without hardware (now)
-- [ ] Validate FMA+ constants against Nunes et al. (2006); compare with INPE *Risco de Fogo*
+- [x] Validate FMA+ constants against Nunes et al. (2006); compare with INPE *Risco de Fogo* ([results](validation.md))
+- [ ] Use INPE *Risco de Fogo* (observed + 0–3-day forecast) as a second danger input per site
+- [ ] Calibrate FMA+ classes per biome (percentiles of FMA+ on days with nearby INPE hotspots)
 - [ ] Accurate Brazil boundary and biome filtering (IBGE), so hotspots outside Brazil are dropped
 - [ ] Automatic sites from ICMBio conservation units
 - [ ] Database migrations (Alembic)

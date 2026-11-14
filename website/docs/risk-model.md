@@ -44,12 +44,13 @@ FMA+ = Σ (100 / Hᵢ) · e^(0.04 · vᵢ)
 | > 24.0 | Muito alta (very high) |
 
 The backend calculates FMA+ over the last 30 days of each node's or site's readings. It uses the reading closest to
-13:00 Brasília time and the total rain for each day. **Alta** and **muito alta** trigger a `danger` alert, at most
+13:00 in the site's local time (`timezone` in `sites.json`) and the total rain for each day. **Alta** and **muito alta** trigger a `danger` alert, at most
 once a day per area.
 
-:::caution To validate
-The rain bands and class limits were transcribed from the literature. Before field use they must be checked against
-the original paper and compared with INPE's own *Risco de Fogo* product. This is tracked in the [roadmap](roadmap.md).
+:::info Validated
+The formula, rain bands and class limits match the published method. Compared with INPE's *Risco de Fogo*, FMA+
+follows the same drying and wetting cycles (rank correlation 0.75) but is about one class more alarming in dry
+spells, and resets too abruptly after a single heavy rain. See [Validation](validation.md).
 :::
 
 ## Fire detection from sensors

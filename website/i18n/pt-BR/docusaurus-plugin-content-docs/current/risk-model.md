@@ -44,12 +44,13 @@ FMA+ = Σ (100 / Hᵢ) · e^(0.04 · vᵢ)
 | > 24,0 | Muito alta |
 
 O backend calcula a FMA+ sobre os últimos 30 dias de leituras de cada nó ou área. Ele usa a leitura mais próxima
-das 13h de Brasília e a chuva total de cada dia. **Alta** e **muito alta** geram um alerta `danger`, no máximo uma vez
+das 13h no horário local da área (`timezone` no `sites.json`) e a chuva total de cada dia. **Alta** e **muito alta** geram um alerta `danger`, no máximo uma vez
 por dia por área.
 
-:::caution A validar
-As faixas de chuva e os limites das classes foram transcritos da literatura. Antes do uso em campo, devem ser
-conferidos com o artigo original e comparados com o produto *Risco de Fogo* do próprio INPE. Isso está no [roadmap](roadmap.md).
+:::info Validado
+A fórmula, as faixas de chuva e os limites das classes conferem com o método publicado. Em comparação com o *Risco de Fogo*
+do INPE, a FMA+ acompanha os mesmos ciclos de seca e chuva (correlação de postos 0,75), mas fica cerca de uma classe mais
+alarmante nos períodos secos e zera de forma brusca demais após uma única chuva forte. Veja [Validação](validation.md).
 :::
 
 ## Detecção de incêndio por sensores
