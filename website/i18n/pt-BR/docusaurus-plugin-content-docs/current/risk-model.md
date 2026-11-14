@@ -53,6 +53,10 @@ do INPE, a FMA+ acompanha os mesmos ciclos de seca e chuva (correlação de post
 alarmante nos períodos secos e zera de forma brusca demais após uma única chuva forte. Veja [Validação](validation.md).
 :::
 
+O painel mostra os dois índices lado a lado para cada área monitorada, com a previsão dos próximos três dias:
+
+![Áreas monitoradas com risco INPE e valores de FMA+](@site/static/img/screenshots/dashboard-areas.png)
+
 ## Alertas de perigo: INPE primeiro, FMA+ junto
 
 Cada área monitorada também recebe o **Risco de Fogo oficial do INPE**: o valor observado e a previsão do INPE para

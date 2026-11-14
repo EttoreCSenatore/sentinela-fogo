@@ -33,6 +33,14 @@ npm install
 npm run dev        # http://localhost:5174, proxies /api to :8100
 ```
 
+Clicking a sensor shows its latest reading and detection score:
+
+![Sensor popup showing temperature, humidity, smoke, flame and FMA+](@site/static/img/screenshots/dashboard-node-popup.png)
+
+The dashboard is responsive and works on a phone:
+
+![Dashboard on a phone](@site/static/img/screenshots/dashboard-mobile.png)
+
 ## 3. (Optional) Simulated sensors over MQTT
 
 ```bash

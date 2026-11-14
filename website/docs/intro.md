@@ -21,6 +21,10 @@ The system runs without any hardware. Each monitored area is a **virtual station
 fire-danger level from real weather data, and the system raises an alert as soon as a satellite detects a hotspot inside the area.
 Physical sensors, when added, provide faster ground-level detection on top of this.
 
+![The Sentinela do Fogo dashboard: monitored areas, sensors and INPE hotspots over Brazil](@site/static/img/screenshots/dashboard-overview.png)
+
+*The live dashboard with the four pilot areas, simulated sensor nodes and the last 24 hours of INPE hotspots. Sensor data in this screenshot is demo data; hotspots and area risk are real public data.*
+
 ## Goals
 
 - **Early detection:** catch fires within minutes, not hours.

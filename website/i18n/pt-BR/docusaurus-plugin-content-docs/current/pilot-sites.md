@@ -19,6 +19,10 @@ As quatro primeiras áreas ficam em regiões propensas a incêndios, em biomas d
 
 As coordenadas são centros aproximados das áreas. Ajuste-as antes de depender delas.
 
+As áreas piloto aparecem no painel lateral com a classe do INPE de hoje, o valor de FMA+ e os próximos três dias:
+
+![Áreas piloto no painel](@site/static/img/screenshots/dashboard-areas.png)
+
 ## Adicionando uma área
 
 Edite `backend/config/sites.json` e reinicie o backend:

@@ -21,6 +21,10 @@ O sistema funciona sem nenhum hardware. Cada área monitorada é uma **estação
 perigo de incêndio a partir de dados meteorológicos reais, e o sistema emite um alerta assim que um satélite detecta um foco dentro da área.
 Sensores físicos, quando instalados, acrescentam uma detecção mais rápida no nível do solo.
 
+![O painel do Sentinela do Fogo: áreas monitoradas, sensores e focos do INPE sobre o Brasil](@site/static/img/screenshots/dashboard-overview.png)
+
+*O painel ao vivo com as quatro áreas piloto, nós sensores simulados e as últimas 24 horas de focos do INPE. Os dados dos sensores nesta captura são de demonstração; os focos e o risco das áreas são dados públicos reais.*
+
 ## Objetivos
 
 - **Detecção precoce:** perceber o fogo em minutos, não em horas.
