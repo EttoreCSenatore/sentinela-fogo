@@ -86,26 +86,50 @@ async def _webhook(client: httpx.AsyncClient, url: str, alert: dict) -> bool:
 CHANNELS = {"telegram": _telegram, "whatsapp": _whatsapp, "sms": _sms, "webhook": _webhook}
 
 
-async def send_alert(node_id: str, kind: str, message: str, score: float = 0.0) -> bool:
-    """Deliver to every matching recipient/channel. True if at least one delivery succeeded."""
+@dataclass
+class Delivery:
+    recipient: str
+    channel: str
+    ok: bool
+    detail: str = ""
+
+
+def _error_detail(e: httpx.HTTPError) -> str:
+    if isinstance(e, httpx.HTTPStatusError):
+        try:  # Telegram/Meta/Twilio all return a JSON error description
+            body = e.response.json()
+            return str(body.get("description") or body.get("message") or body.get("error") or body)
+        except ValueError:
+            return f"HTTP {e.response.status_code}"
+    return type(e).__name__
+
+
+async def deliver(node_id: str, kind: str, message: str, score: float = 0.0) -> list[Delivery]:
+    """Deliver to every matching recipient/channel and report each attempt."""
     alert = {"node_id": node_id, "kind": kind, "score": score, "message": message}
     targets = [(r.name, ch, addr) for r in load_recipients() if r.wants(node_id, kind)
                for ch, addr in r.channels.items()]
     if not targets:
         log.warning("ALERT (no recipient): %s", message)
-        return False
+        return []
 
     async with httpx.AsyncClient(timeout=10) as client:
-        async def one(name: str, ch: str, addr: str) -> bool:
+        async def one(name: str, ch: str, addr: str) -> Delivery:
             sender = CHANNELS.get(ch)
             if sender is None:
                 log.warning("unknown channel %r for %s", ch, name)
-                return False
+                return Delivery(name, ch, False, "unknown channel")
             try:
-                return await sender(client, addr, alert)
-            except httpx.HTTPError:
-                log.exception("%s delivery to %s failed", ch, name)
-                return False
+                ok = await sender(client, addr, alert)
+                return Delivery(name, ch, ok, "" if ok else "channel not configured")
+            except httpx.HTTPError as e:
+                detail = _error_detail(e)
+                log.error("%s delivery to %s failed: %s", ch, name, detail)
+                return Delivery(name, ch, False, detail)
 
-        results = await asyncio.gather(*(one(*t) for t in targets))
-    return any(results)
+        return list(await asyncio.gather(*(one(*t) for t in targets)))
+
+
+async def send_alert(node_id: str, kind: str, message: str, score: float = 0.0) -> bool:
+    """Deliver to every matching recipient/channel. True if at least one delivery succeeded."""
+    return any(d.ok for d in await deliver(node_id, kind, message, score))

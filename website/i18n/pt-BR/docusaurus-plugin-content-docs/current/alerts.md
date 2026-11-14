@@ -36,11 +36,66 @@ por isso é **ignorado pelo git**. Comece a partir de `config/recipients.example
 
 Se não houver arquivo de destinatários, `SENTINELA_TELEGRAM_CHAT_ID` (quando definido) recebe tudo. Caso contrário, os alertas apenas vão para o log.
 
+## Configurar o Telegram (passo a passo)
+
+O Telegram é gratuito e é o canal recomendado para começar. Leva uns 5 minutos.
+
+**1. Crie o bot (no seu app do Telegram)**
+
+1. Abra uma conversa com o [@BotFather](https://t.me/BotFather) e envie `/newbot`.
+2. Escolha um nome de exibição (ex.: `Sentinela do Fogo`) e um nome de usuário terminado em `bot` (ex.: `sentinela_fogo_alertas_bot`).
+3. O BotFather responde com um **token** como `1234567890:AAH...`. Trate-o como uma senha: quem tiver o token controla o bot.
+
+**2. Guarde o token**
+
+Adicione-o ao `infra/.env` (ignorado pelo git), que é lido tanto pela stack Docker quanto pela CLI:
+
+```bash
+SENTINELA_TELEGRAM_BOT_TOKEN=1234567890:AAH...
+```
+
+**3. Converse com o bot**
+
+- Alertas pessoais: abra `https://t.me/<usuario_do_seu_bot>` e toque em **Começar** (Start).
+- Alertas em grupo (recomendado para brigadas): adicione o bot ao grupo e envie qualquer mensagem lá.
+
+**4. Descubra o chat ID e cadastre o destinatário** (a partir de `backend/`)
+
+```bash
+.venv/bin/python -m app.cli telegram-check
+#   Bot OK: @sentinela_fogo_alertas_bot
+#   Chats that talked to the bot:
+#          123456789  private     Ana (@ana)
+#     -1001234567890  supergroup  Brigada Chapada
+
+.venv/bin/python -m app.cli add-telegram "Ana" 123456789
+.venv/bin/python -m app.cli add-telegram "Brigada Chapada" -1001234567890 --sites chapada-veadeiros --kinds fire hotspot
+```
+
+Isso grava o `backend/config/recipients.json`. Rode o `add-telegram` de novo com o mesmo chat ID para mudar o nome, as áreas ou os tipos.
+
+**5. Envie um alerta de teste**
+
+```bash
+.venv/bin/python -m app.cli test-alert
+#   OK    Ana                      telegram
+```
+
+Uma linha `FAIL` mostra o motivo informado pelo Telegram (por exemplo, `chat not found` se o chat nunca tocou em Começar).
+
+**6. Reinicie o backend** para ele carregar o token:
+
+```bash
+docker compose -f infra/docker-compose.yml up -d backend    # stack Docker
+```
+
+(ou reinicie o `uvicorn`, se estiver rodando a partir do código).
+
 ## Canais
 
 | Canal | Custo | Configuração |
 |---|---|---|
-| **Telegram** | Gratuito | Crie um bot com o @BotFather e defina `SENTINELA_TELEGRAM_BOT_TOKEN`. Cada destinatário envia `/start` ao bot. O `chat_id` aparece em `https://api.telegram.org/bot<TOKEN>/getUpdates` |
+| **Telegram** | Gratuito | Veja [Configurar o Telegram](#configurar-o-telegram-passo-a-passo) acima |
 | **Webhook** | Gratuito | Qualquer URL. Recebe `{"node_id", "kind", "score", "message"}` em JSON. Use para integrar sistemas da Defesa Civil, Discord, Slack ou n8n |
 | **WhatsApp** | Pago por conversa | Meta WhatsApp Cloud API: `SENTINELA_WHATSAPP_TOKEN`, `SENTINELA_WHATSAPP_PHONE_NUMBER_ID`. Mensagens que a empresa envia primeiro, fora de uma janela de 24 horas do cliente, exigem um **template aprovado**. O suporte a templates está no roadmap |
 | **SMS** | Pago por mensagem | Twilio: `SENTINELA_TWILIO_ACCOUNT_SID`, `SENTINELA_TWILIO_AUTH_TOKEN`, `SENTINELA_TWILIO_FROM` |
