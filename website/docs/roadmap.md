@@ -24,7 +24,8 @@ title: Roadmap
 - [ ] Public view vs. responder view: alert acknowledgement and notes for brigades
 - [ ] History charts per site (FMA+ and weather over time)
 - [ ] WhatsApp template messages
-- [ ] Deploy to a VPS with TLS; send a Telegram alert to a real group
+- [x] Production stack: HTTPS (Caddy), MQTT over TLS, backups, deployment guide
+- [ ] Deploy to a real server; send a Telegram alert to a real group
 
 ## Phase 2: First physical node
 - [ ] Assemble the BOM, calibrate MQ-2, field-test battery and solar

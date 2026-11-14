@@ -2,6 +2,7 @@
 
     python simulator/simulate.py --nodes 5 --interval 2 --fire-at 3
     python simulator/simulate.py --nodes 3 --password devpass   # authenticated broker
+    python simulator/simulate.py --nodes 3 --password devpass --tls --port 8883 --host sentinela.example.org
 
 --fire-at N  starts a simulated fire at node 0 after N cycles (smoke/temp rise, RH drop, flame).
 Uses aiomqtt from the backend venv.
@@ -11,6 +12,7 @@ import argparse
 import asyncio
 import json
 import random
+import ssl
 from datetime import datetime, timezone
 
 import aiomqtt
@@ -62,6 +64,8 @@ async def main():
     ap.add_argument("--password", default=None,
                     help="MQTT password shared by all simulated nodes (username = node id), for the authenticated broker")
     ap.add_argument("--cycles", type=int, default=None, help="stop after N cycles (default: run forever)")
+    ap.add_argument("--tls", action="store_true", help="connect with TLS (production broker on port 8883)")
+    ap.add_argument("--ca", default=None, help="CA certificate file to trust (default: system CAs)")
     args = ap.parse_args()
 
     nodes = make_nodes(args.nodes)
@@ -71,6 +75,8 @@ async def main():
     async def run_node(i: int, node: dict) -> None:
         # One connection per node: with the authenticated broker each node logs in as itself.
         creds = {"username": node["id"], "password": args.password} if args.password else {}
+        if args.tls:
+            creds["tls_context"] = ssl.create_default_context(cafile=args.ca)
         async with aiomqtt.Client(args.host, args.port, identifier=node["id"], **creds) as client:
             cycle = 0
             while args.cycles is None or cycle < args.cycles:

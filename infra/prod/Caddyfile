@@ -1,0 +1,13 @@
+# Public HTTPS entry point. Caddy obtains and renews the Let's Encrypt certificate for $DOMAIN
+# automatically (ports 80 and 443 must be reachable from the internet). With DOMAIN=localhost it uses
+# its own local CA instead, which is handy for testing.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy dashboard:80
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}

@@ -4,6 +4,7 @@
     .venv/bin/python -m app.cli add-telegram "Coordenação" 123456789 [--sites chapada-veadeiros] [--kinds fire hotspot]
     .venv/bin/python -m app.cli test-alert [--site chapada-veadeiros] [--kind hotspot]
     .venv/bin/python -m app.cli compare-inpe [--days 30] [--csv out.csv]
+    .venv/bin/python -m app.cli backup /data/backups [--keep 14]
 
 Settings come from the environment, backend/.env, and finally ../infra/.env (the Docker stack's file), so the
 same Telegram token works for the CLI and the containers.
@@ -168,6 +169,30 @@ async def compare_inpe(n_days: int, csv_out: str | None) -> int:
     return 0
 
 
+def backup(dest: str, keep: int) -> int:
+    """Consistent online copy of the SQLite database (safe while the backend is running), with rotation."""
+    import sqlite3
+    from datetime import datetime
+
+    from app.config import settings
+
+    url = settings.database_url
+    if not url.startswith("sqlite:///"):
+        print("backup only handles SQLite; for Postgres use pg_dump")
+        return 1
+    src = url.removeprefix("sqlite:///")
+    out_dir = Path(dest)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"sentinela-{datetime.now():%Y%m%d-%H%M%S}.db"
+    with sqlite3.connect(src) as s, sqlite3.connect(out) as d:
+        s.backup(d)
+    old = sorted(out_dir.glob("sentinela-*.db"))[:-keep] if keep > 0 else []
+    for f in old:
+        f.unlink()
+    print(f"backup written: {out} ({out.stat().st_size / 1e6:.1f} MB); removed {len(old)} old backup(s)")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     _load_infra_env()
     ap = argparse.ArgumentParser(prog="python -m app.cli", description="Sentinela do Fogo admin commands")
@@ -184,12 +209,17 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("compare-inpe", help="compare our FMA+ with INPE's Risco de Fogo at each site")
     p.add_argument("--days", type=int, default=30, help="how many past days to compare (max ~85)")
     p.add_argument("--csv", default=None, help="write per-day rows to this CSV file")
+    p = sub.add_parser("backup", help="copy the SQLite database to a folder, keeping the newest N copies")
+    p.add_argument("dest")
+    p.add_argument("--keep", type=int, default=14)
     args = ap.parse_args(argv)
 
     if args.cmd == "telegram-check":
         return asyncio.run(telegram_check())
     if args.cmd == "add-telegram":
         return add_telegram(args.name, args.chat_id, args.sites, args.kinds)
+    if args.cmd == "backup":
+        return backup(args.dest, args.keep)
     if args.cmd == "compare-inpe":
         return asyncio.run(compare_inpe(min(args.days, 85), args.csv))
     return asyncio.run(test_alert(args.site, args.kind))

@@ -124,6 +124,14 @@ static bool connectWifi() {
   return WiFi.status() == WL_CONNECTED;
 }
 
+// Real time is needed to validate TLS certificates, and lets us timestamp readings.
+static bool syncClock() {
+  configTime(0, 0, "a.st1.ntp.br", "pool.ntp.org");
+  uint32_t until = millis() + 10000;
+  while (time(nullptr) < 1700000000 && millis() < until) delay(100);
+  return time(nullptr) >= 1700000000;
+}
+
 static bool connectMqtt() {
 #if MQTT_USE_TLS
   net.setCACert(MQTT_CA_CERT);
@@ -135,6 +143,12 @@ static bool connectMqtt() {
 
 static bool publish(const Readings& r) {
   JsonDocument doc;
+  time_t now = time(nullptr);
+  if (now >= 1700000000) {
+    char ts[25];
+    strftime(ts, sizeof ts, "%Y-%m-%dT%H:%M:%SZ", gmtime(&now));
+    doc["ts"] = ts;
+  }
   doc["lat"] = cachedLat;
   doc["lon"] = cachedLon;
   doc["temp_c"] = r.tempC;
@@ -226,6 +240,8 @@ void setup() {
     Serial.println("temperature/humidity read failed: skipping this cycle");
   } else if (!connectWifi()) {
     Serial.println("Wi-Fi connection failed");
+  } else if (!syncClock() && MQTT_USE_TLS) {
+    Serial.println("NTP time sync failed: needed to validate the TLS certificate");
   } else if (!connectMqtt()) {
     Serial.printf("MQTT connection failed (state %d): check host, port, user = NODE_ID and password\n", mqtt.state());
   } else {

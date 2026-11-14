@@ -5,61 +5,170 @@ title: Deployment
 
 # Deployment (self-hosted)
 
-The whole stack runs with Docker Compose on one machine: a small VPS in a Brazilian region, a home server, or a
-mini-PC on a farm.
+For alerts to be useful, the system has to run **24/7** on a machine that is always on and reachable from the
+internet. This page takes you from an empty server to a running system with HTTPS, encrypted MQTT for sensor nodes, and
+daily backups.
 
 ```text
-infra/docker-compose.yml
-  mosquitto   :1883   authenticated broker with per-node ACLs
-  backend     (internal) FastAPI, SQLite in a named volume, backend/config mounted read-only
-  dashboard   :8080   nginx, serving the React build and proxying /api to the backend
+infra/docker-compose.prod.yml
+  caddy       :80 :443   HTTPS for the dashboard (automatic Let's Encrypt certificate)
+  mosquitto   :8883      MQTT over TLS for sensor nodes (reuses Caddy's certificate)
+  backend     internal   FastAPI, SQLite in a volume, backend/config mounted read-only
+  dashboard   internal   nginx serving the React build, proxying /api to the backend
 ```
 
-## First run
+Plain MQTT (1883) and the backend are only reachable inside the Docker network.
+
+## 1. Get a server
+
+Any Linux machine with **1 vCPU, 1–2 GB RAM, 10 GB disk** and a public IP is enough for a pilot. A server in a
+Brazilian region keeps latency low.
+
+| Option | Cost | Notes |
+|---|---|---|
+| **Oracle Cloud "Always Free"** (São Paulo or Vinhedo region) | Free | Ampere (ARM) VM. Sign-up needs a card, and free capacity is sometimes unavailable, so retry or choose another availability domain. Check the current free-tier terms |
+| Small VPS from a Brazilian or international provider | ~R$ 30–60/month | Simplest. Pick Ubuntu 24.04 LTS |
+| Mini-PC / Raspberry Pi 4/5 at home or on a farm | Hardware only | Needs a fixed public IP or port forwarding for 80, 443 and 8883, and a stable connection |
+
+## 2. Get a domain name
+
+HTTPS certificates need a name, not just an IP.
+
+- **Free:** create a subdomain at [DuckDNS](https://www.duckdns.org) (e.g. `sentinela-chapada.duckdns.org`) and point it at your server's IP.
+- **Own domain:** add an `A` record (e.g. `sentinela.example.org`) pointing to the server's IP.
+
+Check it from your computer: `ping sentinela.example.org` should show the server's IP.
+
+## 3. Install
+
+On the server (Ubuntu), as a user with `sudo`:
 
 ```bash
-cp infra/.env.example infra/.env                 # then edit: Telegram token, etc.
-infra/provision.sh backend                       # creates the backend's MQTT user, writes its password to infra/.env
-infra/provision.sh node cerrado-001 cerrado-002  # one MQTT user per physical node, prints each password once
-cp backend/config/recipients.example.json backend/config/recipients.json   # edit recipients
+# Docker + Compose plugin
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER && newgrp docker
+
+# Code
+sudo mkdir -p /opt/sentinela && sudo chown $USER /opt/sentinela
+git clone https://github.com/EttoreCSenatore/sentinela-fogo.git /opt/sentinela
+cd /opt/sentinela
+
+# Configuration
+cp infra/.env.example infra/.env
+nano infra/.env                       # set DOMAIN=sentinela.example.org (and the Telegram token, see Alerts)
+infra/provision.sh backend            # MQTT user for the backend; password goes into infra/.env
+cp backend/config/recipients.example.json backend/config/recipients.json   # or use app.cli add-telegram later
+```
+
+### Firewall
+
+Open only SSH, HTTP/HTTPS and MQTT-TLS:
+
+```bash
+sudo ufw allow 22/tcp && sudo ufw allow 80/tcp && sudo ufw allow 443/tcp && sudo ufw allow 8883/tcp
+sudo ufw enable
+```
+
+:::note Oracle Cloud
+On Oracle you must **also** add ingress rules for TCP 80, 443 and 8883 in the VCN's *Security List*. Oracle's Ubuntu
+images also ship with `iptables` rules that block everything except SSH. Allow the ports there too, or the site stays unreachable.
+:::
+
+### Start
+
+```bash
+docker compose -f infra/docker-compose.prod.yml up -d --build
+docker compose -f infra/docker-compose.prod.yml logs -f caddy mosquitto     # Ctrl+C to stop following
+```
+
+Within a minute Caddy logs `certificate obtained successfully`, and Mosquitto logs `installed certificate …`. Open
+`https://<your domain>`: the dashboard loads, and after a few minutes it shows the monitored areas and INPE data.
+
+## 4. Connect sensor nodes
+
+For each node:
+
+```bash
+infra/provision.sh node cerrado-001          # prints the node's password once
+```
+
+In the node's `secrets.h` (see [Build a sensor node](hardware.md)): `MQTT_HOST` = your domain, `MQTT_USE_TLS 1`,
+`MQTT_PORT 8883`, and the Let's Encrypt root certificates as described in the file's comments. The node syncs its clock
+over NTP before connecting, which certificate checks require.
+
+To test without hardware, from any computer with the repository:
+
+```bash
+backend/.venv/bin/python simulator/simulate.py --host sentinela.example.org --port 8883 --tls \
+    --nodes 1 --password <node password> --cycles 3
+```
+
+## 5. Backups
+
+The database (alerts, readings, INPE data) lives in a Docker volume. Back it up every day with cron on the server:
+
+```bash
+crontab -e
+# add:
+0 3 * * * cd /opt/sentinela && docker compose -f infra/docker-compose.prod.yml exec -T backend python -m app.cli backup /data/backups --keep 14
+```
+
+The `backup` command makes a consistent copy while the system is running and keeps the newest 14. To keep a copy
+**off the server** (recommended), copy the folder out regularly:
+
+```bash
+docker compose -f infra/docker-compose.prod.yml cp backend:/data/backups ./backups
+# then send ./backups to another machine or storage, e.g. with rsync or rclone
+```
+
+Also keep a safe copy of `infra/.env`, `infra/mosquitto/passwd` and `backend/config/recipients.json`. They aren't in git.
+
+**Restore:** stop the backend, copy a backup over `/data/sentinela.db` in the `backend-data` volume, start again.
+
+## 6. Updating
+
+```bash
+cd /opt/sentinela
+git pull
+docker compose -f infra/docker-compose.prod.yml up -d --build
+```
+
+:::note
+There are no database migrations yet. If a release notes a schema change, take a backup first. Alembic is on the roadmap.
+:::
+
+## 7. Keeping an eye on it
+
+| Check | How |
+|---|---|
+| All services up | `docker compose -f infra/docker-compose.prod.yml ps`: the backend shows `(healthy)` |
+| Data still flowing | Dashboard header shows `● ao vivo`, and INPE hotspots keep updating |
+| Problems | `… logs backend \| grep -E "WARNING\|ERROR"`. Look for `INPE poll failed`, `weather fetch failed`, `Telegram` |
+| Alerts reach people | `docker compose … exec backend python -m app.cli test-alert` |
+
+For an outside check, a free uptime monitor (e.g. UptimeRobot) can watch `https://<domain>/api/health` and email
+you if it goes down.
+
+## Security notes
+
+- Each node logs in as itself, and the ACL only lets it publish its own data (`infra/mosquitto/acl`).
+- `infra/mosquitto/passwd` only contains salted hashes and must be readable by the broker container. On a shared
+  server, restrict it: `sudo chown 1883:1883 infra/mosquitto/passwd && sudo chmod 600 infra/mosquitto/passwd` (then
+  run `provision.sh` with `sudo`).
+- Keep the server updated (`sudo apt upgrade`, or enable unattended upgrades).
+- The Telegram bot token, the MQTT passwords and `recipients.json` are secrets: never commit them.
+
+## Local / development stack
+
+For development, or a test on your own computer, use the simpler stack (dashboard on port 8080, plain MQTT on 1883):
+
+```bash
+cp infra/.env.example infra/.env && infra/provision.sh backend
 docker compose -f infra/docker-compose.yml up -d --build
 ```
 
-Open `http://<server>:8080`.
-
-## Test with simulated nodes
-
-```bash
-PASSWORD=devpass infra/provision.sh node cerrado-000 pantanal-001 amazonia-002
-backend/.venv/bin/python simulator/simulate.py --nodes 3 --password devpass --fire-at 4
-```
-
-Each simulated node logs in as itself, exactly like real hardware would. Node 0 "catches fire" after 4 cycles, and a
-`fire` alert appears on the dashboard. Use `--cycles N` to stop after N rounds.
-
-## MQTT security
-
-- `allow_anonymous false`. Every node logs in with **username = node_id**.
-- The ACL (`infra/mosquitto/acl`) only lets a node publish to `sentinela/v1/nodes/<its own id>/...`, and only
-  the `sentinela-backend` user can read.
-- Before exposing the broker to the internet, add a TLS listener on 8883 (Let's Encrypt certificate) and close 1883.
-- `infra/mosquitto/passwd` holds only salted hashes and is world-readable so the broker (uid 1883 in the container)
-  can read it. On a server, restrict it: `sudo chown 1883:1883 infra/mosquitto/passwd && sudo chmod 600 infra/mosquitto/passwd`
-  (after that, `provision.sh` needs `sudo`).
-
-## Production checklist
-
-- [ ] TLS for the dashboard (Caddy or nginx + Let's Encrypt) and for MQTT (8883)
-- [ ] Back up the `backend-data` volume (SQLite file) every day
-- [ ] Firewall: open only 443 and 8883
-- [ ] Set `SENTINELA_TELEGRAM_*` and test with a real alert
-- [ ] Watch the backend logs for `INPE poll failed` / `weather fetch failed`
-
 ## Postgres
 
-For more than ~100 nodes, or when you need spatial queries, install the Postgres extra (`pip install '.[postgres]'`)
-and set `SENTINELA_DATABASE_URL=postgresql+psycopg://user:pass@host/sentinela`. The code supports both databases.
-:::note
-There are no database migrations yet. Schema changes during development mean recreating the database. Alembic is on
-the roadmap.
-:::
+For more than ~100 nodes, or when you need spatial queries, use Postgres: set
+`SENTINELA_DATABASE_URL=postgresql+psycopg://user:pass@host/sentinela` and install the `postgres` extra
+(`pip install '.[postgres]'`, also needed in the backend image). The `backup` command only handles SQLite; use `pg_dump` for Postgres.

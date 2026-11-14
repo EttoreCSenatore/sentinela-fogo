@@ -12,8 +12,9 @@
 #define MQTT_PORT     1883
 
 // Internet-facing server (see the Deployment docs): set MQTT_USE_TLS 1, port 8883, and paste the CA
-// certificate that signed the broker's certificate. For Let's Encrypt that is ISRG Root X1:
-//   curl -s https://letsencrypt.org/certs/isrgrootx1.pem
+// certificates that may sign the broker's certificate. For Let's Encrypt, paste both roots one after the other:
+//   curl -s https://letsencrypt.org/certs/isrgrootx1.pem https://letsencrypt.org/certs/isrg-root-x2.pem
+// (If Let's Encrypt introduces new roots, add them here too.)
 // #define MQTT_USE_TLS 1
 // #define MQTT_PORT    8883
 // static const char MQTT_CA_CERT[] = R"PEM(

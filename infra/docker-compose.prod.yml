@@ -1,0 +1,62 @@
+# Production stack: HTTPS dashboard (Caddy + Let's Encrypt) and MQTT over TLS for nodes.
+# Setup and checklist: website/docs/deployment.md
+#   cp infra/.env.example infra/.env   # set DOMAIN, Telegram token, ...
+#   infra/provision.sh backend
+#   docker compose -f infra/docker-compose.prod.yml up -d --build
+name: sentinela
+
+services:
+  caddy:
+    image: caddy:2.8
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in infra/.env}
+    volumes:
+      - ./prod/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [dashboard]
+    restart: unless-stopped
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    entrypoint: ["/bin/sh", "/prod/mosquitto-entrypoint.sh"]
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in infra/.env}
+    ports: ["8883:8883"]   # TLS only; plain 1883 stays inside the Docker network
+    volumes:
+      - ./prod/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./prod/mosquitto-entrypoint.sh:/prod/mosquitto-entrypoint.sh:ro
+      - ./mosquitto/acl:/mosquitto/config/acl:ro
+      - ./mosquitto/passwd:/mosquitto/config/passwd:ro
+      - caddy-data:/caddy-data:ro
+      - mosquitto-data:/mosquitto/data
+    restart: unless-stopped
+
+  backend:
+    build: ../backend
+    env_file: .env
+    environment:
+      SENTINELA_MQTT_HOST: mosquitto
+      SENTINELA_MQTT_USERNAME: sentinela-backend
+    volumes:
+      - backend-data:/data
+      - ../backend/config:/app/config:ro
+    depends_on: [mosquitto]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  dashboard:
+    build: ../dashboard
+    depends_on: [backend]
+    restart: unless-stopped
+
+volumes:
+  caddy-data:
+  caddy-config:
+  mosquitto-data:
+  backend-data:

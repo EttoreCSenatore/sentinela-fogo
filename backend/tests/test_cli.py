@@ -104,3 +104,16 @@ def test_infra_env_fills_only_missing_vars(tmp_path, monkeypatch):
     assert os.environ["SENTINELA_MQTT_HOST"] == "keep"
     assert "OTHER" not in os.environ and "SENTINELA_X" not in os.environ
     monkeypatch.delenv("SENTINELA_TELEGRAM_BOT_TOKEN")
+
+
+def test_backup_copies_db_and_rotates(tmp_path, client, capsys):
+    import sqlite3
+    client.post("/api/readings", json={"node_id": "n1", "lat": -15, "lon": -47, "temp_c": 30, "humidity_pct": 40})
+    for name in ("sentinela-20260101-000000.db", "sentinela-20260102-000000.db", "sentinela-20260103-000000.db"):
+        (tmp_path / name).write_bytes(b"old")
+    assert cli.backup(str(tmp_path), keep=2) == 0
+    files = sorted(p.name for p in tmp_path.glob("sentinela-*.db"))
+    assert len(files) == 2 and files[0] == "sentinela-20260103-000000.db"  # oldest two removed
+    with sqlite3.connect(tmp_path / files[1]) as db:
+        assert db.execute("select count(*) from readings").fetchone()[0] == 1
+    assert "removed 2 old backup(s)" in capsys.readouterr().out

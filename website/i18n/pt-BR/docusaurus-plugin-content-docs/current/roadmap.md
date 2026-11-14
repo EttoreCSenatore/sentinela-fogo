@@ -24,7 +24,8 @@ title: Roadmap
 - [ ] Visão pública vs. visão de resposta: confirmação de alertas e anotações para as brigadas
 - [ ] Gráficos de histórico por área (FMA+ e clima ao longo do tempo)
 - [ ] Mensagens de WhatsApp com template
-- [ ] Implantar em uma VPS com TLS; enviar um alerta de Telegram para um grupo real
+- [x] Stack de produção: HTTPS (Caddy), MQTT com TLS, backups, guia de implantação
+- [ ] Implantar num servidor de verdade; enviar um alerta de Telegram para um grupo real
 
 ## Fase 2: Primeiro nó físico
 - [ ] Montar a lista de materiais, calibrar o MQ-2, testar bateria e solar em campo
