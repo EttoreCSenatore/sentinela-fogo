@@ -84,7 +84,7 @@ Cada leitura de sensor recebe um score de 0 a 1. Cada sinal detectado soma ao sc
 
 Um score de **0,6 ou mais** gera um alerta `fire`, com intervalo mínimo de 30 minutos por nó. Comparar cada leitura
 com a linha de base do próprio nó, em vez de limites fixos, ajusta automaticamente para cada sensor e seu entorno
-(veja [calibração](hardware.md#calibração)). Usamos a mediana móvel (e não a leitura anterior) para que um fogo que cresce
+(veja [calibração](hardware.md#5-calibre-na-bancada-antes-de-instalar)). Usamos a mediana móvel (e não a leitura anterior) para que um fogo que cresce
 aos poucos ainda se destaque.
 
 ## Proximidade de focos

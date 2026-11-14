@@ -29,7 +29,8 @@ title: Roadmap
 ## Fase 2: Primeiro nó físico
 - [ ] Montar a lista de materiais, calibrar o MQ-2, testar bateria e solar em campo
 - [ ] Desvios de calibração por nó no backend
-- [ ] Suporte a GPS no firmware
+- [x] Suporte a GPS no firmware (mais escolha SHT31/DHT22, modo de calibração, MQTT com TLS)
+- [x] Guia de montagem passo a passo ([Monte um nó sensor](hardware.md))
 
 ## Fase 3: Rede piloto
 - [ ] Gateway LoRaWAN AU915 + ChirpStack → ingestão HTTP

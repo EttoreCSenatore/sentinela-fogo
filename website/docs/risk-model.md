@@ -84,7 +84,7 @@ Each sensor reading gets a score from 0 to 1. Each signal that fires adds to it,
 
 A score of **0.6 or more** raises a `fire` alert, with a 30-minute cooldown per node. Comparing each reading with
 the node's own baseline, instead of fixed thresholds, adjusts automatically for each sensor and its surroundings
-(see [calibration](hardware.md#calibration)). The rolling median (not the previous reading) is used so that a fire
+(see [calibration](hardware.md#5-calibrate-bench-before-installing)). The rolling median (not the previous reading) is used so that a fire
 building up gradually still stands out.
 
 ## Hotspot proximity

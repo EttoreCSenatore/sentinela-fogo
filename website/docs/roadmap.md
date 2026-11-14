@@ -29,7 +29,8 @@ title: Roadmap
 ## Phase 2: First physical node
 - [ ] Assemble the BOM, calibrate MQ-2, field-test battery and solar
 - [ ] Per-node calibration offsets in the backend
-- [ ] GPS support in the firmware
+- [x] GPS support in the firmware (plus SHT31/DHT22 choice, calibration mode, MQTT over TLS)
+- [x] Step-by-step build guide ([Build a sensor node](hardware.md))
 
 ## Phase 3: Pilot network
 - [ ] LoRaWAN AU915 gateway + ChirpStack → HTTP ingest

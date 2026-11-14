@@ -50,3 +50,29 @@ jobs:
           cache-dependency-path: website/package-lock.json
       - run: npm ci
       - run: npm run build
+
+  firmware:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        flags:
+          - ""                                        # default: SHT31, MQ-2, flame
+          - "-DTH_SENSOR_SHT31=0 -DUSE_GPS=1"         # DHT22 + GPS
+          - "-DCALIBRATION_MODE=1"
+    defaults:
+      run:
+        working-directory: firmware/esp32-node
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ hashFiles('firmware/esp32-node/platformio.ini') }}
+      - run: pip install platformio
+      - run: cp src/secrets.example.h src/secrets.h
+      - run: pio run
+        env:
+          PLATFORMIO_BUILD_FLAGS: ${{ matrix.flags }}
