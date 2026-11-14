@@ -103,6 +103,19 @@ backend/.venv/bin/python simulator/simulate.py --host sentinela.exemplo.org.br -
     --nodes 1 --password <senha do nó> --cycles 3
 ```
 
+### Ingestão via HTTP (opcional: webhooks LoRaWAN, gateways 4G)
+
+O `POST /api/readings` é o único endpoint público que grava dados, por isso vem **desligado por padrão**. Para ativá-lo,
+crie um segredo, coloque-o no `infra/.env` e reinicie o backend:
+
+```bash
+echo "SENTINELA_INGEST_TOKEN=$(openssl rand -hex 24)" >> infra/.env
+docker compose -f infra/docker-compose.prod.yml up -d backend
+```
+
+Quem envia precisa incluí-lo como cabeçalho: `X-Ingest-Token: <o token>`. Requisições sem ele recebem `401`. Sem nenhum
+token configurado, o endpoint responde `503`. Sensores que usam MQTT não precisam disso.
+
 ## 5. Backups
 
 O banco de dados (alertas, leituras, dados do INPE) fica num volume do Docker. Faça backup todo dia com o cron do servidor:
@@ -157,7 +170,9 @@ Para uma verificação de fora, um monitor de disponibilidade gratuito (ex.: Upt
   compartilhado, restrinja: `sudo chown 1883:1883 infra/mosquitto/passwd && sudo chmod 600 infra/mosquitto/passwd`
   (depois rode o `provision.sh` com `sudo`).
 - Mantenha o servidor atualizado (`sudo apt upgrade`, ou ative as atualizações automáticas).
-- O token do bot do Telegram, as senhas MQTT e o `recipients.json` são segredos: nunca os coloque no git.
+- O token do bot do Telegram, as senhas MQTT, o token de ingestão e o `recipients.json` são segredos: nunca os coloque no git.
+- O painel e todo `GET` em `/api` são públicos por projeto (conscientização pública). Eles mostram a localização dos sensores e o texto dos alertas.
+- O broker descarta mensagens MQTT maiores que 8 KB (`message_size_limit`); a telemetria real tem cerca de 300 bytes.
 
 ## Stack local / de desenvolvimento
 

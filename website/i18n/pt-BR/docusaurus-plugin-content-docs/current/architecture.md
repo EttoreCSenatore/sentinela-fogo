@@ -71,6 +71,7 @@ posição fixa no firmware. `sentinela/v1/nodes/{node_id}/status` leva a mensage
 (last will do MQTT).
 
 O mesmo payload (com `node_id`) pode ser enviado para `POST /api/readings`. Servidores de rede LoRaWAN e gateways 4G usam esse caminho.
+A requisição precisa levar o cabeçalho `X-Ingest-Token: <SENTINELA_INGEST_TOKEN>`. Sem um token configurado, o endpoint fica desativado (503).
 
 ## API HTTP
 
@@ -83,7 +84,7 @@ O mesmo payload (com `node_id`) pode ser enviado para `POST /api/readings`. Serv
 | GET | `/api/nodes/{id}/danger` | Valor e classe do FMA+ |
 | GET | `/api/hotspots?hours=24&uf=GO` | Focos do INPE no Brasil, opcionalmente de um estado |
 | GET | `/api/alerts` | Últimos alertas |
-| POST | `/api/readings` | Ingestão via HTTP |
+| POST | `/api/readings` | Ingestão via HTTP (exige o cabeçalho `X-Ingest-Token`) |
 
 ## Modelo de dados
 

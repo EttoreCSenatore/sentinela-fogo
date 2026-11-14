@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     inpe_risk_enabled: bool = True
     inpe_risk_poll_seconds: int = 3 * 3600
 
+    # HTTP ingest (POST /api/readings, e.g. a LoRaWAN webhook) requires this shared secret in the
+    # X-Ingest-Token header. Unset = HTTP ingest disabled. Generate one with: openssl rand -hex 24
+    ingest_token: str | None = None
+
     # Detection
     hotspot_radius_km: float = 5.0
     hotspot_window_hours: int = 3

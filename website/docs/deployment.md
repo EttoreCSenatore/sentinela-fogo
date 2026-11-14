@@ -103,6 +103,19 @@ backend/.venv/bin/python simulator/simulate.py --host sentinela.example.org --po
     --nodes 1 --password <node password> --cycles 3
 ```
 
+### HTTP ingest (optional: LoRaWAN webhooks, 4G gateways)
+
+`POST /api/readings` is the only public endpoint that writes data, so it is **off by default**. To enable it, create a
+secret, put it in `infra/.env`, and restart the backend:
+
+```bash
+echo "SENTINELA_INGEST_TOKEN=$(openssl rand -hex 24)" >> infra/.env
+docker compose -f infra/docker-compose.prod.yml up -d backend
+```
+
+The sender must include it as a header: `X-Ingest-Token: <the token>`. Requests without it get `401`. Without any token
+configured the endpoint returns `503`. Sensors using MQTT don't need this.
+
 ## 5. Backups
 
 The database (alerts, readings, INPE data) lives in a Docker volume. Back it up every day with cron on the server:
@@ -157,7 +170,9 @@ you if it goes down.
   server, restrict it: `sudo chown 1883:1883 infra/mosquitto/passwd && sudo chmod 600 infra/mosquitto/passwd` (then
   run `provision.sh` with `sudo`).
 - Keep the server updated (`sudo apt upgrade`, or enable unattended upgrades).
-- The Telegram bot token, the MQTT passwords and `recipients.json` are secrets: never commit them.
+- The Telegram bot token, the MQTT passwords, the ingest token and `recipients.json` are secrets: never commit them.
+- The dashboard and every `GET` under `/api` are public by design (public awareness). They show sensor locations and alert texts.
+- The broker drops MQTT messages larger than 8 KB (`message_size_limit`); real telemetry is about 300 bytes.
 
 ## Local / development stack
 

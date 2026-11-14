@@ -2,6 +2,6 @@
 services:
   mosquitto:
     image: eclipse-mosquitto:2
-    ports: ["1883:1883"]
+    ports: ["127.0.0.1:1883:1883"]   # anonymous broker: this computer only
     volumes:
       - ./mosquitto/mosquitto.dev.conf:/mosquitto/config/mosquitto.conf:ro

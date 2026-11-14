@@ -1,9 +1,10 @@
 import asyncio
+import hmac
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
@@ -65,9 +66,18 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/api/readings", status_code=201)
+def require_ingest_token(x_ingest_token: str | None = Header(default=None)) -> None:
+    """Shared-secret check for the one public write endpoint (constant-time comparison)."""
+    expected = settings.ingest_token
+    if not expected:
+        raise HTTPException(503, "HTTP ingest is disabled: set SENTINELA_INGEST_TOKEN to enable it")
+    if x_ingest_token is None or not hmac.compare_digest(x_ingest_token.encode(), expected.encode()):
+        raise HTTPException(401, "invalid or missing X-Ingest-Token")
+
+
+@app.post("/api/readings", status_code=201, dependencies=[Depends(require_ingest_token)])
 async def post_reading(t: Telemetry, db: Session = Depends(get_db)):
-    """HTTP ingest. An alternative to MQTT for LoRaWAN network-server webhooks and 4G gateways."""
+    """HTTP ingest for LoRaWAN network-server webhooks and 4G gateways. Requires the X-Ingest-Token header."""
     reading, alert = await service.process(db, t)
     return {"score": reading.score, "alert_id": alert.id if alert else None}
 
@@ -110,8 +120,12 @@ async def event_stream(request: Request, queue):
 @app.get("/api/stream")
 async def stream(request: Request):
     """Server-Sent Events: `alert`, `reading` and `refresh` events."""
+    try:
+        queue = bus.subscribe()
+    except RuntimeError:  # too many open streams: refuse instead of exhausting memory
+        raise HTTPException(503, "too many live connections, try again shortly")
     return StreamingResponse(
-        event_stream(request, bus.subscribe()),
+        event_stream(request, queue),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

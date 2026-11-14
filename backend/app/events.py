@@ -10,6 +10,7 @@ import logging
 
 log = logging.getLogger(__name__)
 QUEUE_SIZE = 100
+MAX_SUBSCRIBERS = 500  # the dashboard is public; bound memory and file descriptors
 
 
 class EventBus:
@@ -17,6 +18,8 @@ class EventBus:
         self._subs: set[asyncio.Queue] = set()
 
     def subscribe(self) -> asyncio.Queue:
+        if len(self._subs) >= MAX_SUBSCRIBERS:
+            raise RuntimeError("too many subscribers")
         q: asyncio.Queue = asyncio.Queue(maxsize=QUEUE_SIZE)
         self._subs.add(q)
         return q

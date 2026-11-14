@@ -9,6 +9,7 @@ os.environ["SENTINELA_INPE_ENABLED"] = "false"
 os.environ["SENTINELA_WEATHER_ENABLED"] = "false"
 os.environ["SENTINELA_TELEGRAM_BOT_ENABLED"] = "false"
 os.environ["SENTINELA_INPE_RISK_ENABLED"] = "false"
+os.environ["SENTINELA_INGEST_TOKEN"] = "test-ingest-token"
 os.environ["SENTINELA_SITES_FILE"] = "/nonexistent/sites.json"
 os.environ["SENTINELA_RECIPIENTS_FILE"] = "/nonexistent/recipients.json"
 os.environ.pop("SENTINELA_TELEGRAM_BOT_TOKEN", None)
@@ -29,5 +30,6 @@ def clean_db():
 
 @pytest.fixture
 def client():
-    with TestClient(app) as c:
+    # Sends the ingest token by default, as a legitimate gateway would; see test_security.py for the unauthenticated case.
+    with TestClient(app, headers={"X-Ingest-Token": "test-ingest-token"}) as c:
         yield c

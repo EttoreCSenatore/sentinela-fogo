@@ -104,6 +104,18 @@ async def process_update(client: httpx.AsyncClient, base: str, update: dict) -> 
         r.raise_for_status()
 
 
+async def safe_process_update(client: httpx.AsyncClient, base: str, update: dict) -> None:
+    """Answer one update; on failure log what went wrong WITHOUT the request URL (it contains the bot token)."""
+    try:
+        await process_update(client, base, update)
+    except httpx.HTTPStatusError as e:
+        log.error("Telegram reply to update %s failed: HTTP %s", update.get("update_id"), e.response.status_code)
+    except httpx.HTTPError as e:
+        log.error("Telegram reply to update %s failed: %s", update.get("update_id"), type(e).__name__)
+    except Exception as e:  # never let one bad message stop the bot; the type is enough to debug
+        log.error("Telegram update %s could not be handled: %s", update.get("update_id"), type(e).__name__)
+
+
 async def poll_forever() -> None:
     token = settings.telegram_bot_token
     if not token:
@@ -129,10 +141,7 @@ async def poll_forever() -> None:
                 r.raise_for_status()
                 for update in r.json()["result"]:
                     offset = update["update_id"] + 1
-                    try:
-                        await process_update(client, base, update)
-                    except Exception:
-                        log.exception("failed to answer Telegram update %s", update.get("update_id"))
+                    await safe_process_update(client, base, update)
             except httpx.HTTPError as e:
                 log.warning("Telegram polling error: %s; retrying in 5s", type(e).__name__)
                 await asyncio.sleep(5)

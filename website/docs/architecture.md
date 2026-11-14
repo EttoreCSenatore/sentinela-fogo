@@ -71,6 +71,7 @@ fixed position in the firmware. `sentinela/v1/nodes/{node_id}/status` carries th
 (MQTT last will).
 
 The same payload (with `node_id`) can be sent to `POST /api/readings`. LoRaWAN network servers and 4G gateways use this.
+The request must carry the header `X-Ingest-Token: <SENTINELA_INGEST_TOKEN>`. Without a configured token the endpoint is disabled (503).
 
 ## HTTP API
 
@@ -83,7 +84,7 @@ The same payload (with `node_id`) can be sent to `POST /api/readings`. LoRaWAN n
 | GET | `/api/nodes/{id}/danger` | FMA+ value and class |
 | GET | `/api/hotspots?hours=24&uf=GO` | INPE hotspots in Brazil, optionally for one state |
 | GET | `/api/alerts` | Latest alerts |
-| POST | `/api/readings` | HTTP ingest |
+| POST | `/api/readings` | HTTP ingest (needs the `X-Ingest-Token` header) |
 
 ## Data model
 
