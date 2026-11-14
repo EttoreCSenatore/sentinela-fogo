@@ -5,9 +5,10 @@ Please report vulnerabilities responsibly.
 
 ## Reporting
 
-**Do not open a public issue with details.** Open an issue titled **"Security contact request"** with no technical
-information, and a maintainer will arrange a private channel. Please include what is affected (backend, firmware,
-infrastructure, docs) but not how to exploit it.
+**Do not open a public issue with details.** Use GitHub's private reporting: on the repository page go to
+**Security → Report a vulnerability**
+(https://github.com/EttoreCSenatore/sentinela-fogo/security/advisories/new). Only the maintainers can see the report.
+Please say what is affected (backend, firmware, infrastructure, docs) and how to reproduce it.
 
 We will acknowledge within a few days. This is a volunteer project, so fixes happen on a best-effort basis.
 
