@@ -5,7 +5,7 @@ title: Getting started
 
 # Getting started
 
-You need **Python 3.12+**, **Node.js 20+** and, optionally, **Docker** (for the MQTT broker).
+You need **Python 3.12+**, **Node.js 20.19+ or 22+** and, optionally, **Docker** (for the MQTT broker).
 
 ## 1. Backend
 

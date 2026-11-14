@@ -5,7 +5,7 @@ title: Primeiros passos
 
 # Primeiros passos
 
-Você precisa de **Python 3.12+**, **Node.js 20+** e, opcionalmente, **Docker** (para o broker MQTT).
+Você precisa de **Python 3.12+**, **Node.js 20.19+ ou 22+** e, opcionalmente, **Docker** (para o broker MQTT).
 
 ## 1. Backend
 
