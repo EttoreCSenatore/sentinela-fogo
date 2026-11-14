@@ -13,8 +13,9 @@ Tudo o que usamos é gratuito e aberto.
   publicadas pelo Programa Queimadas do INPE.
 - **Feed:** `https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/10min/`, com um CSV novo a cada 10 minutos
   chamado `focos_10min_AAAAMMDD_HHMM.csv`. Colunas: `lat,lon,satelite,data` (UTC).
-- **Cobertura:** América do Sul. Guardamos apenas os pontos dentro do retângulo que envolve o Brasil. Esse retângulo é
-  aproximado e deixa passar alguns pontos de países vizinhos; filtrar pela fronteira real do Brasil está no [roadmap](roadmap.md).
+- **Cobertura:** América do Sul. Guardamos apenas os pontos dentro do Brasil, usando os limites oficiais dos estados do
+  IBGE (abaixo), e marcamos cada foco com seu estado (UF). Pontos até 2 km fora do contorno ainda contam, para que focos
+  no litoral, em ilhas pequenas e em rios de fronteira não se percam no contorno simplificado.
 - **Limitações:** detecções geoestacionárias (GOES) são frequentes, mas grosseiras (pixel de ~2 km). Os sensores de órbita
   polar são mais precisos, mas passam poucas vezes por dia. Nuvens e fumaça podem esconder focos, e incêndios pequenos podem não ser detectados.
 - **Código:** `backend/app/ingest/inpe.py`
@@ -38,12 +39,19 @@ Tudo o que usamos é gratuito e aberto.
   são apagados após a amostragem. Defina `SENTINELA_INPE_RISK_ENABLED=false` para desligar.
 - **Código:** `backend/app/ingest/inpe_risk.py`
 
+## IBGE: limites dos estados
+
+- **O quê:** limites oficiais dos 27 estados (UFs), da API de *Malhas territoriais* do IBGE (v3, detalhe intermediário).
+- **Arquivo:** `backend/config/br_uf.geojson` (250 KB, incluído no repositório, então não há download durante a execução).
+- **Usado para:** descartar focos fora do Brasil e marcar cada um com seu estado (`/api/hotspots?uf=GO`).
+- **Código:** `backend/app/geo.py`. Configurações: `SENTINELA_BOUNDARIES_FILE`, `SENTINELA_BORDER_TOLERANCE_KM` (padrão 2).
+
 ## Fontes candidatas
 
 | Fonte | Por quê |
 |---|---|
 | Estações automáticas do INMET | Medições reais para validar os valores do Open-Meteo |
-| Limites de biomas e estados do IBGE | Filtro preciso do Brasil e estatísticas por bioma |
+| Limites dos biomas do IBGE | Estatísticas e alertas por bioma |
 | Unidades de conservação do ICMBio | Monitorar áreas protegidas automaticamente |
 | NASA FIRMS (VIIRS 375 m) | Focos mais precisos (exige chave de mapa gratuita) |
 | MapBiomas Fogo | Área queimada histórica, para escolher áreas e validar resultados |

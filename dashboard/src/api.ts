@@ -2,7 +2,7 @@ export type Node = {
   id: string; name: string | null; lat: number; lon: number;
   biome: string | null; kind: string; radius_km: number | null; last_seen: string | null; battery_v: number | null;
 };
-export type Hotspot = { lat: number; lon: number; satellite: string; ts: string };
+export type Hotspot = { lat: number; lon: number; satellite: string; ts: string; uf: string | null };
 export type Alert = { id: number; node_id: string; ts: string; kind: string; score: number; message: string; delivered: boolean };
 export type Reading = { ts: string; temp_c: number; humidity_pct: number; wind_ms: number | null; smoke_ppm: number | null; flame: boolean; score: number };
 export type Danger = { node_id: string; fma_plus: number; danger_class: string; days_used: number };

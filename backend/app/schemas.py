@@ -59,6 +59,7 @@ class HotspotOut(BaseModel):
     lon: float
     satellite: str
     ts: UTCDatetime
+    uf: str | None = None
 
 
 class AlertOut(BaseModel):

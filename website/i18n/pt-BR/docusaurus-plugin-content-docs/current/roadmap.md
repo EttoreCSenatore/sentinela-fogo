@@ -18,7 +18,8 @@ title: Roadmap
 - [x] Validar as constantes da FMA+ com Nunes et al. (2006); comparar com o *Risco de Fogo* do INPE ([resultados](validation.md))
 - [x] Usar o *Risco de Fogo* do INPE (observado + previsão de 0 a 3 dias) como segunda fonte de perigo por área
 - [ ] Calibrar as classes da FMA+ por bioma (percentis da FMA+ nos dias com focos do INPE por perto)
-- [ ] Filtro preciso pela fronteira do Brasil e por bioma (IBGE), descartando focos fora do país
+- [x] Filtro preciso pela fronteira do Brasil (estados do IBGE): focos fora do país são descartados e marcados com a UF
+- [ ] Limites dos biomas (IBGE) para estatísticas por bioma
 - [ ] Áreas automáticas a partir das unidades de conservação do ICMBio
 - [ ] Migrações de banco (Alembic)
 - [ ] Visão pública vs. visão de resposta: confirmação de alertas e anotações para as brigadas

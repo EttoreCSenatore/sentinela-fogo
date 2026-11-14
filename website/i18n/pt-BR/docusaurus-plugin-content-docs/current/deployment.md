@@ -134,7 +134,8 @@ docker compose -f infra/docker-compose.prod.yml up -d --build
 ```
 
 :::note
-Ainda não há migrações de banco. Se uma versão avisar sobre mudança no esquema, faça backup antes. O Alembic está no roadmap.
+Colunas opcionais novas são adicionadas automaticamente a um banco existente na inicialização. Outras mudanças de
+esquema exigiriam uma ferramenta de migração (o Alembic está no roadmap), então faça backup antes de atualizar.
 :::
 
 ## 7. Acompanhamento

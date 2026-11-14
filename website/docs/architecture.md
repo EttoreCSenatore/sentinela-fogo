@@ -81,7 +81,7 @@ The same payload (with `node_id`) can be sent to `POST /api/readings`. LoRaWAN n
 | GET | `/api/nodes` | Nodes and sites |
 | GET | `/api/nodes/{id}/readings` | Recent readings |
 | GET | `/api/nodes/{id}/danger` | FMA+ value and class |
-| GET | `/api/hotspots?hours=24` | INPE hotspots |
+| GET | `/api/hotspots?hours=24&uf=GO` | INPE hotspots in Brazil, optionally for one state |
 | GET | `/api/alerts` | Latest alerts |
 | POST | `/api/readings` | HTTP ingest |
 
@@ -89,6 +89,6 @@ The same payload (with `node_id`) can be sent to `POST /api/readings`. LoRaWAN n
 
 - `nodes`: id, name, kind (`sensor` / `virtual`), lat, lon, biome, radius_km, last_seen, battery_v
 - `readings`: node_id, ts, temp_c, humidity_pct, smoke_ppm, flame, wind_ms, rain_mm, score
-- `hotspots`: lat, lon, satellite, ts (unique on all four)
+- `hotspots`: lat, lon, satellite, ts (unique on these four), uf (state, from IBGE boundaries)
 - `site_risk`: node_id, kind (`observed` / `forecast`), valid_date, issued_date, rf_mean, rf_max (INPE Risco de Fogo per area)
 - `alerts`: node_id, ts, kind (`fire` / `hotspot` / `danger`), score, message, delivered

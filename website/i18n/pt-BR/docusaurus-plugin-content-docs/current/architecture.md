@@ -81,7 +81,7 @@ O mesmo payload (com `node_id`) pode ser enviado para `POST /api/readings`. Serv
 | GET | `/api/nodes` | Nós e áreas |
 | GET | `/api/nodes/{id}/readings` | Leituras recentes |
 | GET | `/api/nodes/{id}/danger` | Valor e classe do FMA+ |
-| GET | `/api/hotspots?hours=24` | Focos do INPE |
+| GET | `/api/hotspots?hours=24&uf=GO` | Focos do INPE no Brasil, opcionalmente de um estado |
 | GET | `/api/alerts` | Últimos alertas |
 | POST | `/api/readings` | Ingestão via HTTP |
 
@@ -89,6 +89,6 @@ O mesmo payload (com `node_id`) pode ser enviado para `POST /api/readings`. Serv
 
 - `nodes`: id, name, kind (`sensor` / `virtual`), lat, lon, biome, radius_km, last_seen, battery_v
 - `readings`: node_id, ts, temp_c, humidity_pct, smoke_ppm, flame, wind_ms, rain_mm, score
-- `hotspots`: lat, lon, satellite, ts (únicos pelos quatro campos)
+- `hotspots`: lat, lon, satellite, ts (únicos por esses quatro campos), uf (estado, pelos limites do IBGE)
 - `site_risk`: node_id, kind (`observed` / `forecast`), valid_date, issued_date, rf_mean, rf_max (Risco de Fogo do INPE por área)
 - `alerts`: node_id, ts, kind (`fire` / `hotspot` / `danger`), score, message, delivered

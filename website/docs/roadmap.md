@@ -18,7 +18,8 @@ title: Roadmap
 - [x] Validate FMA+ constants against Nunes et al. (2006); compare with INPE *Risco de Fogo* ([results](validation.md))
 - [x] Use INPE *Risco de Fogo* (observed + 0–3-day forecast) as a second danger input per site
 - [ ] Calibrate FMA+ classes per biome (percentiles of FMA+ on days with nearby INPE hotspots)
-- [ ] Accurate Brazil boundary and biome filtering (IBGE), so hotspots outside Brazil are dropped
+- [x] Accurate Brazil boundary filtering (IBGE states): hotspots outside Brazil are dropped and tagged with their UF
+- [ ] Biome boundaries (IBGE) for per-biome statistics
 - [ ] Automatic sites from ICMBio conservation units
 - [ ] Database migrations (Alembic)
 - [ ] Public view vs. responder view: alert acknowledgement and notes for brigades

@@ -134,7 +134,8 @@ docker compose -f infra/docker-compose.prod.yml up -d --build
 ```
 
 :::note
-There are no database migrations yet. If a release notes a schema change, take a backup first. Alembic is on the roadmap.
+New optional columns are added to an existing database automatically at startup. Other schema changes would need a
+migration tool (Alembic is on the roadmap), so take a backup before updating.
 :::
 
 ## 7. Keeping an eye on it

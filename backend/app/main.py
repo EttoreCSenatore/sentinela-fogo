@@ -25,6 +25,11 @@ async def lifespan(_app: FastAPI):
     init_db()
     with SessionLocal() as db:
         sync_sites(db)
+        from app.ingest.inpe import tag_existing
+        tagged, deleted = tag_existing(db)
+        if tagged or deleted:
+            logging.getLogger(__name__).info("hotspots: %d tagged with their state, %d outside Brazil removed",
+                                             tagged, deleted)
     tasks = []
     if settings.mqtt_enabled:
         from app.ingest import mqtt
@@ -136,9 +141,17 @@ def node_danger(node_id: str, db: Session = Depends(get_db)):
 
 
 @app.get("/api/hotspots", response_model=list[HotspotOut])
-def hotspots(hours: int = Query(24, ge=1, le=168), limit: int = Query(5000, le=20000), db: Session = Depends(get_db)):
+def hotspots(
+    hours: int = Query(24, ge=1, le=168),
+    limit: int = Query(5000, le=20000),
+    uf: str | None = Query(None, min_length=2, max_length=2, description="state, e.g. GO"),
+    db: Session = Depends(get_db),
+):
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
-    return db.scalars(select(Hotspot).where(Hotspot.ts >= since).order_by(Hotspot.ts.desc()).limit(limit)).all()
+    q = select(Hotspot).where(Hotspot.ts >= since)
+    if uf:
+        q = q.where(Hotspot.uf == uf.upper())
+    return db.scalars(q.order_by(Hotspot.ts.desc()).limit(limit)).all()
 
 
 @app.get("/api/alerts", response_model=list[AlertOut])

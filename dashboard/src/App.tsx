@@ -92,7 +92,7 @@ export default function App() {
         <h1>🔥 Sentinela do Fogo</h1>
         <span className="meta">
           {nodes.filter((n) => n.kind === "virtual").length} áreas monitoradas ·{" "}
-          {nodes.filter((n) => n.kind !== "virtual").length} sensores · {hotspots.length} focos INPE (24h)
+          {nodes.filter((n) => n.kind !== "virtual").length} sensores · {hotspots.length} focos no Brasil (INPE, 24h)
           {" · "}<span className={live ? "live" : "offline"}>{live ? "● ao vivo" : "○ reconectando"}</span>
           {error && <span className="error"> · erro: {error}</span>}
         </span>
@@ -105,7 +105,7 @@ export default function App() {
         {hotspots.map((h, i) => (
           <CircleMarker key={`h${i}`} center={[h.lat, h.lon]} radius={2}
             pathOptions={{ color: "#ff5a00", weight: 0, fillOpacity: 0.6 }}>
-            <Popup>Foco {h.satellite}<br />{fmt(h.ts)}</Popup>
+            <Popup>Foco de calor{h.uf && ` · ${h.uf}`}<br />{h.satellite} · {fmt(h.ts)}</Popup>
           </CircleMarker>
         ))}
         {nodes.filter((n) => n.kind === "virtual").map((n) => {

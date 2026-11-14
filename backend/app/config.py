@@ -20,7 +20,11 @@ class Settings(BaseSettings):
     inpe_base_url: str = "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/10min/"
     inpe_poll_seconds: int = 600
     # Rough Brazil bounding box (lat_min, lat_max, lon_min, lon_max); the feed covers South America.
-    bbox: tuple[float, float, float, float] = (-34.0, 5.5, -74.0, -34.0)
+    # Points inside it are then checked against IBGE's state boundaries (boundaries_file).
+    bbox: tuple[float, float, float, float] = (-34.0, 5.5, -74.0, -28.0)
+    boundaries_file: str = "config/br_uf.geojson"
+    # Points just outside the simplified outline (coast, small islands, border rivers) still count as Brazil.
+    border_tolerance_km: float = 2.0
 
     # Pilot sites (virtual stations) and weather
     sites_file: str = "config/sites.json"

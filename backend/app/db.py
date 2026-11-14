@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime
 
 from sqlalchemy import (
@@ -47,6 +48,7 @@ class Hotspot(Base):
     lon: Mapped[float] = mapped_column(Float, index=True)
     satellite: Mapped[str] = mapped_column(String(32))
     ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    uf: Mapped[str | None] = mapped_column(String(2), index=True)  # IBGE state, see app/geo.py
 
 
 class SiteRisk(Base):
@@ -100,9 +102,34 @@ def upsert_ignore(db, model, rows: list[dict]):
     return insert(model).values(rows).on_conflict_do_nothing()
 
 
+def add_missing_columns(eng) -> list[str]:
+    """Tiny forward-only migration: add new *nullable* model columns that an existing database lacks.
+
+    Enough until we adopt Alembic; it never drops or changes columns.
+    """
+    from sqlalchemy import inspect
+
+    insp = inspect(eng)
+    added = []
+    with eng.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if not insp.has_table(table.name):
+                continue
+            have = {c["name"] for c in insp.get_columns(table.name)}
+            for col in table.columns:
+                if col.name in have or not col.nullable:
+                    continue
+                ddl_type = col.type.compile(dialect=eng.dialect)
+                conn.exec_driver_sql(f'ALTER TABLE {table.name} ADD COLUMN "{col.name}" {ddl_type}')
+                added.append(f"{table.name}.{col.name}")
+    return added
+
+
 def init_db(eng=None) -> None:
     eng = eng or engine
     if eng.url.get_backend_name() == "sqlite":
         with eng.connect() as conn:
             conn.exec_driver_sql("PRAGMA journal_mode=WAL")
     Base.metadata.create_all(eng)
+    for name in add_missing_columns(eng):
+        logging.getLogger(__name__).info("database: added column %s", name)
