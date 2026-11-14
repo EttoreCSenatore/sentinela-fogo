@@ -12,7 +12,7 @@ The system calculates two different things:
 | Question | How easily could a fire start and spread here? | Is something burning right now? |
 | Speed | Daily | Every reading or hotspot |
 | Inputs | Humidity, wind and rain | Flame, smoke, temperature/humidity anomalies, satellite hotspots |
-| Alert kind | `danger` | `fire` (sensor) and `hotspot` (satellite) |
+| Alert kind | `danger` (INPE Risco de Fogo + FMA+) | `fire` (sensor) and `hotspot` (satellite) |
 
 ## Fire danger: FMA+
 
@@ -44,14 +44,31 @@ FMA+ = Σ (100 / Hᵢ) · e^(0.04 · vᵢ)
 | > 24.0 | Muito alta (very high) |
 
 The backend calculates FMA+ over the last 30 days of each node's or site's readings. It uses the reading closest to
-13:00 in the site's local time (`timezone` in `sites.json`) and the total rain for each day. **Alta** and **muito alta** trigger a `danger` alert, at most
-once a day per area.
+13:00 in the site's local time (`timezone` in `sites.json`) and the total rain for each day. FMA+ *alta* and *muito alta* only trigger `danger` alerts when INPE data is
+unavailable (see below).
 
 :::info Validated
 The formula, rain bands and class limits match the published method. Compared with INPE's *Risco de Fogo*, FMA+
 follows the same drying and wetting cycles (rank correlation 0.75) but is about one class more alarming in dry
 spells, and resets too abruptly after a single heavy rain. See [Validation](validation.md).
 :::
+
+## Danger alerts: INPE first, FMA+ alongside
+
+Each monitored area also gets **INPE's official Risco de Fogo**: the observed value and INPE's forecast for today
+and the next 3 days. Our [validation](validation.md) showed that FMA+ runs about one class too high and resets too
+abruptly after rain, so INPE's index decides `danger` alerts:
+
+| Situation | Alert? |
+|---|---|
+| INPE today is **Alto** or **Crítico** | Yes: "risco de fogo ALTO hoje em …" |
+| INPE forecast is Alto/Crítico on one of the next 3 days | Yes, as an early warning: "Previsão: risco de fogo CRÍTICO em … em 17/11" |
+| INPE is below Alto, even if FMA+ is *alta* | No |
+| No INPE data for the area | Falls back to FMA+ *alta* / *muito alta* |
+
+Messages always include the next days' INPE forecast and the current FMA+ value, and there's at most one `danger`
+alert per area per day. The dashboard colors each area by INPE's level (FMA+ when INPE has no data), and the
+Telegram `/status` command shows both indices.
 
 ## Fire detection from sensors
 

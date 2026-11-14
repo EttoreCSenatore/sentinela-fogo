@@ -18,3 +18,7 @@ aside li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
 .live { color: #2e9e5b; }
 .offline { color: var(--muted); }
+.site { display: block !important; }
+.site-head { display: flex; align-items: center; gap: 6px; }
+.forecast { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid; border-radius: 10px; padding: 1px 7px; font-size: 11px; }

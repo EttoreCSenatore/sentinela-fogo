@@ -14,7 +14,7 @@ from app.config import settings
 from app.db import Alert, Hotspot, Node, Reading, SessionLocal, init_db
 from app.sites import sync_sites
 from app.events import bus
-from app.schemas import AlertOut, DangerOut, HotspotOut, NodeOut, OverviewNode, ReadingOut, Telemetry
+from app.schemas import AlertOut, DangerOut, HotspotOut, InpeRisk, NodeOut, OverviewNode, ReadingOut, Telemetry
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logging.getLogger("httpx").setLevel(logging.WARNING)  # one line per INPE/Open-Meteo request is noise
@@ -32,6 +32,9 @@ async def lifespan(_app: FastAPI):
     if settings.inpe_enabled:
         from app.ingest import inpe
         tasks.append(asyncio.create_task(inpe.poll_forever()))
+    if settings.inpe_risk_enabled:
+        from app.ingest import inpe_risk
+        tasks.append(asyncio.create_task(inpe_risk.poll_forever()))
     if settings.weather_enabled:
         from app.ingest import weather
         tasks.append(asyncio.create_task(weather.poll_forever()))
@@ -77,6 +80,9 @@ def overview(db: Session = Depends(get_db)):
             item.last = ReadingOut.model_validate(last)
             value, cls, n = service.node_danger(db, node.id)
             item.danger = DangerOut(node_id=node.id, fma_plus=round(value, 2), danger_class=cls, days_used=n)
+        risk = service.inpe_risk(db, node.id)
+        if risk is not None:
+            item.inpe = InpeRisk.model_validate(risk)
         out.append(item)
     return out
 

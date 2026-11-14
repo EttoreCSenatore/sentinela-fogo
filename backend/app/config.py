@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     weather_poll_seconds: int = 3600
     weather_backfill_days: int = 30
 
+    # INPE Risco de Fogo per site (observed + 0-3 day forecast; ~90 MB of downloads per day)
+    inpe_risk_enabled: bool = True
+    inpe_risk_poll_seconds: int = 3 * 3600
+
     # Detection
     hotspot_radius_km: float = 5.0
     hotspot_window_hours: int = 3

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Circle, CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
-import { api, type Alert, type Hotspot, type OverviewNode } from "./api";
+import { api, type Alert, type Hotspot, type InpeRiskDay, type OverviewNode } from "./api";
 
 // Live updates come over SSE (/api/stream). Polling is only a safety net if the stream drops.
 const FALLBACK_POLL_MS = 60_000;
@@ -21,6 +21,22 @@ const DANGER_COLORS: Record<string, string> = {
 const DANGER_LABEL: Record<string, string> = {
   nula: "Nula", pequena: "Pequena", media: "Média", alta: "Alta", muito_alta: "Muito alta",
 };
+
+// INPE Risco de Fogo classes use the same 5-step palette as FMA+.
+const RF_COLORS: Record<string, string> = {
+  minimo: "#2e9e5b", baixo: "#8bbf3f", medio: "#f2c230", alto: "#f49d37", critico: "#d7263d",
+};
+
+// The official INPE risk drives the area color; FMA+ is the fallback when INPE has no data yet.
+function siteColor(n: NodeState) {
+  if (n.inpe?.today) return RF_COLORS[n.inpe.today.risk_class];
+  return DANGER_COLORS[n.danger?.danger_class ?? ""] ?? "#888";
+}
+
+function dayLabel(d: InpeRiskDay) {
+  const [, m, day] = d.date.split("-");
+  return `${day}/${m}`;
+}
 
 function fmt(ts: string) {
   return new Date(ts).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -93,14 +109,18 @@ export default function App() {
           </CircleMarker>
         ))}
         {nodes.filter((n) => n.kind === "virtual").map((n) => {
-          const color = DANGER_COLORS[n.danger?.danger_class ?? ""] ?? "#888";
+          const color = siteColor(n);
           return (
             <Circle key={n.id} center={[n.lat, n.lon]} radius={(n.radius_km ?? 10) * 1000}
               pathOptions={{ color, weight: 2, fillColor: color, fillOpacity: 0.15 }}>
               <Popup>
                 <strong>{n.name ?? n.id}</strong> ({n.biome})<br />
-                Risco: <strong>{DANGER_LABEL[n.danger?.danger_class ?? ""] ?? "-"}</strong>
-                {n.danger && <> · FMA+ {n.danger.fma_plus} ({n.danger.days_used} dias)</>}<br />
+                {n.inpe?.today && <>Risco INPE hoje: <strong>{n.inpe.today.label}</strong> ({n.inpe.today.rf.toFixed(2)})<br /></>}
+                {n.inpe && n.inpe.forecast.length > 0 && (
+                  <>Previsão: {n.inpe.forecast.map((d) => `${dayLabel(d)} ${d.label}`).join(" · ")}<br /></>
+                )}
+                FMA+: <strong>{DANGER_LABEL[n.danger?.danger_class ?? ""] ?? "-"}</strong>
+                {n.danger && <> ({n.danger.fma_plus}, {n.danger.days_used} dias)</>}<br />
                 {n.last && <>{n.last.temp_c.toFixed(1)}°C · UR {n.last.humidity_pct.toFixed(0)}% · vento {n.last.wind_ms?.toFixed(1) ?? "-"} m/s<br /></>}
                 raio monitorado: {n.radius_km} km · atualizado: {n.last_seen ? fmt(n.last_seen) : "-"}
               </Popup>
@@ -129,11 +149,29 @@ export default function App() {
         <h2>Áreas monitoradas</h2>
         <ul className="sites">
           {nodes.filter((n) => n.kind === "virtual").map((n) => (
-            <li key={n.id}>
-              <span className="dot" style={{ background: DANGER_COLORS[n.danger?.danger_class ?? ""] ?? "#888" }} />
-              {n.name ?? n.id}
-              <span className="meta"> · {DANGER_LABEL[n.danger?.danger_class ?? ""] ?? "sem dados"}
-                {n.danger && ` (FMA+ ${n.danger.fma_plus})`}</span>
+            <li key={n.id} className="site">
+              <div className="site-head">
+                <span className="dot" style={{ background: siteColor(n) }} />
+                {n.name ?? n.id}
+              </div>
+              <div className="meta">
+                {n.inpe?.today
+                  ? <>INPE hoje: <strong>{n.inpe.today.label}</strong> ({n.inpe.today.rf.toFixed(2)})</>
+                  : "INPE: sem dados"}
+                {" · "}FMA+ {DANGER_LABEL[n.danger?.danger_class ?? ""] ?? "-"}
+                {n.danger && ` (${n.danger.fma_plus})`}
+              </div>
+              {n.inpe && n.inpe.forecast.length > 0 && (
+                <div className="forecast">
+                  {n.inpe.forecast.map((d) => (
+                    <span key={d.date} className="chip" title={`RF ${d.rf.toFixed(2)} (máx. ${d.rf_max.toFixed(2)})`}
+                      style={{ borderColor: RF_COLORS[d.risk_class] }}>
+                      <span className="dot" style={{ background: RF_COLORS[d.risk_class] }} />
+                      {dayLabel(d)} {d.label}
+                    </span>
+                  ))}
+                </div>
+              )}
             </li>
           ))}
         </ul>

@@ -27,13 +27,16 @@ Tudo o que usamos é gratuito e aberto.
   do Open-Meteo é para **uso não comercial**, e os dados são CC BY 4.0, então dê o crédito se publicar resultados.
 - **Código:** `backend/app/ingest/weather.py`
 
-## Risco de Fogo do INPE: risco oficial de fogo (validação)
+## Risco de Fogo do INPE: risco oficial de fogo
 
 - **O quê:** o índice diário de risco de fogo do INPE (0–1, cinco classes), em uma grade de cerca de 1 km.
 - **Feed:** `https://dataserver-coids.inpe.br/queimadas/queimadas/riscofogo_meteorologia/observado/risco_fogo/`
   (um arquivo NetCDF por dia, ~12,5 MB, ano corrente). Há também uma previsão de 0 a 3 dias em `.../previsto/risco_fogo/` (GeoTIFF).
-- **Usado para:** conferir a nossa FMA+ ([Validação](validation.md)). Usá-lo como fonte de perigo em tempo real está no roadmap.
-- **Código:** `backend/app/validation/inpe_risk.py`
+- **Usado para:** a fonte principal dos alertas `danger`, das cores do painel e do `/status`, além de conferir a
+  nossa FMA+ ([Validação](validation.md)). O backend procura arquivos novos a cada 3 horas e amostra o raio de cada área.
+- **Tráfego:** cerca de 90 MB por dia (quatro arquivos de previsão de ~20 MB e um observado de ~12,5 MB). Os arquivos
+  são apagados após a amostragem. Defina `SENTINELA_INPE_RISK_ENABLED=false` para desligar.
+- **Código:** `backend/app/ingest/inpe_risk.py`
 
 ## Fontes candidatas
 

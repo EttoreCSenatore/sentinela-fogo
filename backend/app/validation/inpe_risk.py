@@ -33,56 +33,11 @@ RF_BASE = "https://dataserver-coids.inpe.br/queimadas/queimadas/riscofogo_meteor
 RF_FILE_RE = re.compile(r"INPE_FireRiskModel_[\d.]+_FireRisk_(\d{8})\.nc")
 CACHE = Path("data/inpe_rf_samples.csv")
 CACHE_FIELDS = ["date", "site", "rf_center", "rf_mean", "rf_max"]
-
 FMA_CLASSES = ["nula", "pequena", "media", "alta", "muito_alta"]
-RF_CLASSES = ["minimo", "baixo", "medio", "alto", "critico"]
-RF_LIMITS = [0.15, 0.4, 0.7, 0.95]
 
-
-def rf_class(v: float) -> str:
-    for limit, name in zip(RF_LIMITS, RF_CLASSES):
-        if v < limit:
-            return name
-    return RF_CLASSES[-1]
-
-
-@dataclass
-class Sample:
-    rf_center: float
-    rf_mean: float
-    rf_max: float
-
-
-def sample_grid(path: Path, sites: list[dict]) -> dict[str, Sample]:
-    """Sample the RF grid inside each site's radius (mean and max of valid cells, plus the centre cell)."""
-    import netCDF4
-    import numpy as np
-
-    out = {}
-    with netCDF4.Dataset(path) as ds:
-        lats, lons = ds["lat"][:], ds["lon"][:]
-        for s in sites:
-            r = s.get("radius_km", 10)
-            dlat = r / 111.0
-            dlon = dlat / max(math.cos(math.radians(s["lat"])), 0.1)
-            iy = np.where((lats >= s["lat"] - dlat) & (lats <= s["lat"] + dlat))[0]
-            ix = np.where((lons >= s["lon"] - dlon) & (lons <= s["lon"] + dlon))[0]
-            if len(iy) == 0 or len(ix) == 0:
-                continue
-            block = np.ma.masked_invalid(ds["rf"][0, iy.min():iy.max() + 1, ix.min():ix.max() + 1])
-            block = np.ma.masked_less(block, 0)  # -999 = missing
-            # keep only cells inside the circle
-            yy, xx = np.meshgrid(lats[iy.min():iy.max() + 1], lons[ix.min():ix.max() + 1], indexing="ij")
-            dist = np.hypot((yy - s["lat"]) * 111.0, (xx - s["lon"]) * 111.0 * math.cos(math.radians(s["lat"])))
-            block = np.ma.masked_where(dist > r, block)
-            if block.count() == 0:
-                continue
-            cy = int(np.abs(lats - s["lat"]).argmin())
-            cx = int(np.abs(lons - s["lon"]).argmin())
-            c = ds["rf"][0, cy, cx]
-            center = float("nan") if np.ma.is_masked(c) or float(c) < 0 else float(c)
-            out[s["id"]] = Sample(center, float(block.mean()), float(block.max()))
-    return out
+# Shared with the live ingest so validation and production sample the grids the same way.
+from app.ingest.inpe_risk import RF_CLASSES, RF_LIMITS, Sample, rf_class  # noqa: E402,F401
+from app.ingest.inpe_risk import sample_netcdf as sample_grid  # noqa: E402,F401
 
 
 def _read_cache() -> dict[tuple[str, str], Sample]:

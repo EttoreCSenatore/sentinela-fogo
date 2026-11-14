@@ -12,7 +12,8 @@ title: Arquitetura
  │ temp/UR, GPS │ ─▶ gateway ─▶      └────────────┘       │  ├ ingest/inpe.py    focos     │──▶ Telegram / WhatsApp
  └──────────────┘    ChirpStack ── HTTP ──────────▶       │  ├ ingest/weather.py áreas     │    SMS / webhook
                                                           │  ├ risk/  FMA+ e detecção      │
-   INPE BDQueimadas (10 min) ───────────────────────────▶ │  ├ alerts/ roteamento e envio  │
+   INPE BDQueimadas (10 min) ───────────────────────────▶ │  ├ ingest/inpe_risk.py RF+prev │
+   Risco de Fogo INPE (diário) ─────────────────────────▶ │  ├ alerts/ roteamento e envio  │
    Open-Meteo (horário) ────────────────────────────────▶ │  └ REST + SSE  /api/...        │
                                                           │     SQLite → Postgres/PostGIS  │
                                                           └───────────────┬────────────────┘
@@ -75,7 +76,7 @@ O mesmo payload (com `node_id`) pode ser enviado para `POST /api/readings`. Serv
 
 | Método | Caminho | Descrição |
 |---|---|---|
-| GET | `/api/overview` | Todos os nós/áreas com a última leitura e o perigo FMA+ (uma chamada para o painel) |
+| GET | `/api/overview` | Todos os nós/áreas com a última leitura, o perigo FMA+ e o risco + previsão do INPE (uma chamada para o painel) |
 | GET | `/api/stream` | Server-Sent Events: eventos `alert` e `reading` em tempo real |
 | GET | `/api/nodes` | Nós e áreas |
 | GET | `/api/nodes/{id}/readings` | Leituras recentes |
@@ -89,4 +90,5 @@ O mesmo payload (com `node_id`) pode ser enviado para `POST /api/readings`. Serv
 - `nodes`: id, name, kind (`sensor` / `virtual`), lat, lon, biome, radius_km, last_seen, battery_v
 - `readings`: node_id, ts, temp_c, humidity_pct, smoke_ppm, flame, wind_ms, rain_mm, score
 - `hotspots`: lat, lon, satellite, ts (únicos pelos quatro campos)
+- `site_risk`: node_id, kind (`observed` / `forecast`), valid_date, issued_date, rf_mean, rf_max (Risco de Fogo do INPE por área)
 - `alerts`: node_id, ts, kind (`fire` / `hotspot` / `danger`), score, message, delivered

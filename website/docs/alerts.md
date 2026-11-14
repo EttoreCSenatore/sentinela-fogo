@@ -11,7 +11,7 @@ title: Alerts
 |---|---|---|
 | `fire` | Sensor detection score ≥ 0.6 | 30 min per node |
 | `hotspot` | INPE hotspot inside a site's or node's radius | 3 h per area |
-| `danger` | FMA+ *alta* or *muito alta* | 1 per day per area |
+| `danger` | INPE Risco de Fogo *Alto*/*Crítico* today or forecast for the next 3 days (FMA+ if INPE has no data). See [Risk model](risk-model.md#danger-alerts-inpe-first-fma-alongside) | 1 per day per area |
 
 ## Recipients
 
@@ -100,7 +100,7 @@ While the backend runs, the bot answers in any chat:
 | Command | Reply |
 |---|---|
 | `/start` | The chat ID, and whether this chat already receives alerts |
-| `/status` | Current FMA+ fire-danger level for each monitored area |
+| `/status` | INPE risk today, INPE forecast for the next days, and FMA+ for each monitored area |
 | `/ajuda` | List of commands |
 
 The bot never subscribes anyone by itself: an admin adds recipients with `add-telegram`. Telegram allows only one

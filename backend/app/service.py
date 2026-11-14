@@ -2,7 +2,7 @@
 
 import math
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.alerts import dispatch
 from app.config import settings
 from app.events import bus
-from app.db import Alert, Hotspot, Node, Reading
+from app.db import Alert, Hotspot, Node, Reading, SiteRisk
 from app.risk.detect import haversine_km, score_reading
 from app.risk.fma import daily_observations, danger_class, fma_plus
 from app.sites import site_timezone
@@ -132,15 +132,75 @@ async def check_hotspots_near_nodes(db: Session, now: datetime | None = None) ->
     return alerts
 
 
-async def check_danger(db: Session, node: Node, now: datetime | None = None) -> Alert | None:
-    """At most one alert a day per node when FMA+ is alta or muito alta."""
-    now = now or datetime.now(timezone.utc)
-    value, cls, n = node_danger(db, node.id)
-    if cls not in ("alta", "muito_alta") or n < 3:
+INPE_ALERT_CLASSES = ("alto", "critico")
+FMA_ALERT_CLASSES = ("alta", "muito_alta")  # used only when there is no INPE data for the site
+
+
+def inpe_risk(db: Session, node_id: str, today: date | None = None) -> dict | None:
+    """INPE Risco de Fogo for a site: today's level and the forecast for the next days.
+
+    Today = the forecast valid today (T0) or, failing that, the latest observed value from the last 2 days.
+    """
+    from app.ingest.inpe_risk import RF_LABEL, rf_class
+
+    today = today or datetime.now(ZoneInfo(site_timezone(node_id))).date()
+    fc = db.scalars(select(SiteRisk).where(
+        SiteRisk.node_id == node_id, SiteRisk.kind == "forecast", SiteRisk.valid_date >= today,
+    ).order_by(SiteRisk.valid_date)).all()
+    current = next((r for r in fc if r.valid_date == today), None)
+    if current is None:
+        current = db.scalar(select(SiteRisk).where(
+            SiteRisk.node_id == node_id, SiteRisk.kind == "observed",
+            SiteRisk.valid_date >= today - timedelta(days=2),
+        ).order_by(SiteRisk.valid_date.desc()).limit(1))
+    if current is None and not fc:
         return None
+
+    def item(r: SiteRisk) -> dict:
+        cls = rf_class(r.rf_mean)
+        return {"date": r.valid_date, "kind": r.kind, "rf": round(r.rf_mean, 3), "rf_max": round(r.rf_max, 3),
+                "risk_class": cls, "label": RF_LABEL[cls]}
+
+    return {"today": item(current) if current else None,
+            "forecast": [item(r) for r in fc if r.valid_date > today]}
+
+
+async def check_danger(db: Session, node: Node, now: datetime | None = None) -> Alert | None:
+    """At most one `danger` alert a day per area.
+
+    INPE's Risco de Fogo drives the alert (today, or forecast for the next 3 days, at Alto or Crítico):
+    it is official and calibrated for Brazil, while our validation showed FMA+ runs about one class
+    high (website/docs/validation.md). FMA+ is reported alongside, and only triggers alerts on its own
+    when INPE data is unavailable for the site.
+    """
+    now = now or datetime.now(timezone.utc)
     label = node.name or node.id
-    msg = f"⚠️ Risco de incêndio {cls.replace('_', ' ').upper()} em {label}: FMA+ {value:.1f} ({n} dias de dados)"
-    return await raise_alert(db, node.id, "danger", min(1.0, value / 24), msg, now, 20 * 60)
+    fma_value, fma_cls, n = node_danger(db, node.id)
+    fma_txt = f"FMA+ {fma_value:.1f} ({fma_cls.replace('_', ' ')})" if n else "FMA+ sem dados"
+    risk = inpe_risk(db, node.id)
+
+    if risk is None:
+        if fma_cls not in FMA_ALERT_CLASSES or n < 3:
+            return None
+        msg = (f"⚠️ Risco de incêndio {fma_cls.replace('_', ' ').upper()} em {label}: {fma_txt}, "
+               f"{n} dias de dados (risco do INPE indisponível)")
+        return await raise_alert(db, node.id, "danger", min(1.0, fma_value / 24), msg, now, 20 * 60)
+
+    days = ([risk["today"]] if risk["today"] else []) + risk["forecast"]
+    alarming = [d for d in days if d["risk_class"] in INPE_ALERT_CLASSES]
+    if not alarming:
+        return None
+    worst = max(alarming, key=lambda d: d["rf"])
+    today = risk["today"]
+    if today and today["risk_class"] in INPE_ALERT_CLASSES:
+        head = f"⚠️ Risco de fogo {today['label'].upper()} hoje em {label} (INPE {today['rf']:.2f})"
+    else:
+        first = alarming[0]
+        head = (f"⚠️ Previsão: risco de fogo {first['label'].upper()} em {label} "
+                f"em {first['date']:%d/%m} (INPE {first['rf']:.2f})")
+    outlook = ", ".join(f"{d['date']:%d/%m} {d['label']} ({d['rf']:.2f})" for d in risk["forecast"])
+    msg = head + (f". Próximos dias: {outlook}" if outlook else "") + f". {fma_txt}."
+    return await raise_alert(db, node.id, "danger", worst["rf"], msg, now, 20 * 60)
 
 
 def node_danger(db: Session, node_id: str, days: int = 30) -> tuple[float, str, int]:

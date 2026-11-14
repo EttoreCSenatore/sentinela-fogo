@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy import (
-    Boolean, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint, create_engine, event,
+    Boolean, Date, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint, create_engine, event,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
@@ -47,6 +47,20 @@ class Hotspot(Base):
     lon: Mapped[float] = mapped_column(Float, index=True)
     satellite: Mapped[str] = mapped_column(String(32))
     ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class SiteRisk(Base):
+    """INPE Risco de Fogo sampled over a site: observed (yesterday and before) or forecast (today + 3 days)."""
+    __tablename__ = "site_risk"
+    __table_args__ = (UniqueConstraint("node_id", "kind", "valid_date"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    node_id: Mapped[str] = mapped_column(ForeignKey("nodes.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(16))  # observed | forecast
+    valid_date: Mapped[date] = mapped_column(Date, index=True)
+    issued_date: Mapped[date | None] = mapped_column(Date)
+    rf_mean: Mapped[float] = mapped_column(Float)
+    rf_max: Mapped[float] = mapped_column(Float)
+    fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Alert(Base):

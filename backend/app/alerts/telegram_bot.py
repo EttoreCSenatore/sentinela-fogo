@@ -44,19 +44,31 @@ def reply_start(chat_id: int) -> str:
             "Comandos: /status (perigo de incêndio nas áreas), /ajuda")
 
 
+RF_ICON = {"minimo": "🟢", "baixo": "🟢", "medio": "🟡", "alto": "🟠", "critico": "🔴"}
+
+
 def reply_status() -> str:
     with SessionLocal() as db:
         sites = db.scalars(select(Node).where(Node.kind == "virtual").order_by(Node.name)).all()
         if not sites:
             return "Nenhuma área monitorada configurada."
-        lines = ["🔥 Perigo de incêndio (FMA+) por área:\n"]
+        lines = ["🔥 Risco de fogo por área\n"]
         for node in sites:
+            lines.append(f"📍 {node.name or node.id}")
+            risk = service.inpe_risk(db, node.id)
+            if risk and risk["today"]:
+                t = risk["today"]
+                lines.append(f"   INPE hoje: {RF_ICON[t['risk_class']]} {t['label']} ({t['rf']:.2f})")
+            if risk and risk["forecast"]:
+                fc = "  ".join(f"{d['date']:%d/%m} {RF_ICON[d['risk_class']]} {d['label']}" for d in risk["forecast"])
+                lines.append(f"   Previsão: {fc}")
+            if not risk:
+                lines.append("   INPE: sem dados ainda")
             value, cls, days = service.node_danger(db, node.id)
-            if days == 0:
-                lines.append(f"⚪ {node.name or node.id}: sem dados ainda")
-            else:
-                lines.append(f"{DANGER_ICON.get(cls, '⚪')} {node.name or node.id}: "
-                             f"{DANGER_LABEL.get(cls, cls)} (FMA+ {value:.1f})")
+            if days:
+                lines.append(f"   FMA+: {DANGER_ICON.get(cls, '⚪')} {DANGER_LABEL.get(cls, cls)} ({value:.1f})")
+            lines.append("")
+        lines.append("INPE = Risco de Fogo oficial (0 a 1). FMA+ = índice calculado com o clima da área.")
     return "\n".join(lines)
 
 

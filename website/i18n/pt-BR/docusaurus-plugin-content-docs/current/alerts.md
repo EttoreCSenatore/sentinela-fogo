@@ -11,7 +11,7 @@ title: Alertas
 |---|---|---|
 | `fire` | Score de detecção do sensor ≥ 0,6 | 30 min por nó |
 | `hotspot` | Foco do INPE dentro do raio de uma área ou nó | 3 h por área |
-| `danger` | FMA+ *alta* ou *muito alta* | 1 por dia por área |
+| `danger` | Risco de Fogo do INPE *Alto*/*Crítico* hoje ou previsto para os próximos 3 dias (FMA+ se o INPE não tiver dados). Veja [Modelo de risco](risk-model.md#alertas-de-perigo-inpe-primeiro-fma-junto) | 1 por dia por área |
 
 ## Destinatários
 
@@ -100,7 +100,7 @@ Enquanto o backend estiver rodando, o bot responde em qualquer chat:
 | Comando | Resposta |
 |---|---|
 | `/start` | O chat ID e se este chat já recebe alertas |
-| `/status` | Nível atual de perigo de incêndio (FMA+) em cada área monitorada |
+| `/status` | Risco do INPE hoje, previsão do INPE para os próximos dias e FMA+ de cada área monitorada |
 | `/ajuda` | Lista de comandos |
 
 O bot nunca cadastra ninguém sozinho: um administrador adiciona os destinatários com `add-telegram`. O Telegram

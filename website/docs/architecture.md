@@ -12,7 +12,8 @@ title: Architecture
  │ temp/RH, GPS │ ─▶ gateway ─▶      └────────────┘       │  ├ ingest/inpe.py    hotspots  │──▶ Telegram / WhatsApp
  └──────────────┘    ChirpStack ── HTTP ──────────▶       │  ├ ingest/weather.py sites     │    SMS / webhook
                                                           │  ├ risk/  FMA+ & detection     │
-   INPE BDQueimadas (10 min) ───────────────────────────▶ │  ├ alerts/ routing & delivery  │
+   INPE BDQueimadas (10 min) ───────────────────────────▶ │  ├ ingest/inpe_risk.py RF+fcst │
+   INPE Risco de Fogo (daily) ──────────────────────────▶ │  ├ alerts/ routing & delivery  │
    Open-Meteo (hourly) ─────────────────────────────────▶ │  └ REST + SSE  /api/...        │
                                                           │     SQLite → Postgres/PostGIS  │
                                                           └───────────────┬────────────────┘
@@ -75,7 +76,7 @@ The same payload (with `node_id`) can be sent to `POST /api/readings`. LoRaWAN n
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/overview` | Every node/site with its latest reading and FMA+ danger (one call for the dashboard) |
+| GET | `/api/overview` | Every node/site with its latest reading, FMA+ danger and INPE risk + forecast (one call for the dashboard) |
 | GET | `/api/stream` | Server-Sent Events: `alert` and `reading` events as they happen |
 | GET | `/api/nodes` | Nodes and sites |
 | GET | `/api/nodes/{id}/readings` | Recent readings |
@@ -89,4 +90,5 @@ The same payload (with `node_id`) can be sent to `POST /api/readings`. LoRaWAN n
 - `nodes`: id, name, kind (`sensor` / `virtual`), lat, lon, biome, radius_km, last_seen, battery_v
 - `readings`: node_id, ts, temp_c, humidity_pct, smoke_ppm, flame, wind_ms, rain_mm, score
 - `hotspots`: lat, lon, satellite, ts (unique on all four)
+- `site_risk`: node_id, kind (`observed` / `forecast`), valid_date, issued_date, rf_mean, rf_max (INPE Risco de Fogo per area)
 - `alerts`: node_id, ts, kind (`fire` / `hotspot` / `danger`), score, message, delivered

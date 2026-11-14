@@ -13,7 +13,9 @@ async function get<T>(path: string): Promise<T> {
   return r.json();
 }
 
-export type OverviewNode = Node & { last: Reading | null; danger: Danger | null };
+export type InpeRiskDay = { date: string; kind: string; rf: number; rf_max: number; risk_class: string; label: string };
+export type InpeRisk = { today: InpeRiskDay | null; forecast: InpeRiskDay[] };
+export type OverviewNode = Node & { last: Reading | null; danger: Danger | null; inpe: InpeRisk | null };
 
 export const api = {
   overview: () => get<OverviewNode[]>("/api/overview"),

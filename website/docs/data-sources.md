@@ -27,13 +27,16 @@ Everything we use is free and open.
   free API is for **non-commercial use**, and the data is CC BY 4.0, so credit it if you publish results.
 - **Code:** `backend/app/ingest/weather.py`
 
-## INPE Risco de Fogo: official fire risk (validation)
+## INPE Risco de Fogo: official fire risk
 
 - **What:** INPE's daily fire-risk index (0–1, five classes), on a grid of about 1 km.
 - **Feed:** `https://dataserver-coids.inpe.br/queimadas/queimadas/riscofogo_meteorologia/observado/risco_fogo/`
   (one NetCDF file per day, ~12.5 MB, current year). There's also a 0–3-day forecast in `.../previsto/risco_fogo/` (GeoTIFF).
-- **Used for:** checking our FMA+ ([Validation](validation.md)). Using it as a live danger input is on the roadmap.
-- **Code:** `backend/app/validation/inpe_risk.py`
+- **Used for:** the main input for `danger` alerts, the dashboard colors and `/status`, plus checking our FMA+
+  ([Validation](validation.md)). The backend checks for new files every 3 hours and samples each area's radius.
+- **Traffic:** about 90 MB per day (four forecast files of ~20 MB plus one observed file of ~12.5 MB). Files are
+  deleted after sampling. Set `SENTINELA_INPE_RISK_ENABLED=false` to turn it off.
+- **Code:** `backend/app/ingest/inpe_risk.py`
 
 ## Candidates to add
 

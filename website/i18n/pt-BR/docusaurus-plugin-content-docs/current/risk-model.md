@@ -12,7 +12,7 @@ O sistema calcula duas coisas diferentes:
 | Pergunta | Com que facilidade um fogo começaria e se espalharia aqui? | Algo está queimando agora? |
 | Frequência | Diária | A cada leitura ou foco |
 | Entradas | Umidade, vento e chuva | Chama, fumaça, anomalias de temperatura/umidade, focos de satélite |
-| Tipo de alerta | `danger` | `fire` (sensor) e `hotspot` (satélite) |
+| Tipo de alerta | `danger` (Risco de Fogo do INPE + FMA+) | `fire` (sensor) e `hotspot` (satélite) |
 
 ## Perigo de incêndio: FMA+
 
@@ -44,14 +44,31 @@ FMA+ = Σ (100 / Hᵢ) · e^(0.04 · vᵢ)
 | > 24,0 | Muito alta |
 
 O backend calcula a FMA+ sobre os últimos 30 dias de leituras de cada nó ou área. Ele usa a leitura mais próxima
-das 13h no horário local da área (`timezone` no `sites.json`) e a chuva total de cada dia. **Alta** e **muito alta** geram um alerta `danger`, no máximo uma vez
-por dia por área.
+das 13h no horário local da área (`timezone` no `sites.json`) e a chuva total de cada dia. FMA+ *alta* e *muito alta* só geram alertas `danger` quando não há
+dados do INPE (veja abaixo).
 
 :::info Validado
 A fórmula, as faixas de chuva e os limites das classes conferem com o método publicado. Em comparação com o *Risco de Fogo*
 do INPE, a FMA+ acompanha os mesmos ciclos de seca e chuva (correlação de postos 0,75), mas fica cerca de uma classe mais
 alarmante nos períodos secos e zera de forma brusca demais após uma única chuva forte. Veja [Validação](validation.md).
 :::
+
+## Alertas de perigo: INPE primeiro, FMA+ junto
+
+Cada área monitorada também recebe o **Risco de Fogo oficial do INPE**: o valor observado e a previsão do INPE para
+hoje e os próximos 3 dias. A nossa [validação](validation.md) mostrou que a FMA+ fica cerca de uma classe acima e zera de
+forma brusca demais depois da chuva, então é o índice do INPE que decide os alertas `danger`:
+
+| Situação | Alerta? |
+|---|---|
+| INPE hoje está **Alto** ou **Crítico** | Sim: "risco de fogo ALTO hoje em …" |
+| Previsão do INPE Alto/Crítico em um dos próximos 3 dias | Sim, como aviso antecipado: "Previsão: risco de fogo CRÍTICO em … em 17/11" |
+| INPE abaixo de Alto, mesmo com a FMA+ *alta* | Não |
+| Sem dados do INPE para a área | Volta a usar a FMA+ *alta* / *muito alta* |
+
+As mensagens sempre trazem a previsão do INPE para os próximos dias e o valor atual da FMA+, e há no máximo um alerta
+`danger` por área por dia. O painel colore cada área pelo nível do INPE (FMA+ quando o INPE não tem dados), e o comando
+`/status` do Telegram mostra os dois índices.
 
 ## Detecção de incêndio por sensores
 

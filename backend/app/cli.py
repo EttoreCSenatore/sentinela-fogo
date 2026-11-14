@@ -3,7 +3,7 @@
     .venv/bin/python -m app.cli telegram-check
     .venv/bin/python -m app.cli add-telegram "Coordenação" 123456789 [--sites chapada-veadeiros] [--kinds fire hotspot]
     .venv/bin/python -m app.cli test-alert [--site chapada-veadeiros] [--kind hotspot]
-    .venv/bin/python -m app.cli compare-inpe [--days 30] [--csv out.csv]   (needs: pip install -e '.[validation]')
+    .venv/bin/python -m app.cli compare-inpe [--days 30] [--csv out.csv]
 
 Settings come from the environment, backend/.env, and finally ../infra/.env (the Docker stack's file), so the
 same Telegram token works for the CLI and the containers.

@@ -71,8 +71,8 @@ For each site and day, we compared our FMA+ (from Open-Meteo weather) with the *
 - Daily `danger` alerts based only on FMA+ will fire **more often than INPE would suggest**, and may stay quiet right
   after a single heavy rain in the middle of a drought.
 - Recommended next steps (see the [roadmap](roadmap.md)):
-  1. **Use INPE RF as a second danger input** for each site, including INPE's 0–3-day forecast. It's free, official and
-     already calibrated for Brazil.
+  1. ✅ **Use INPE RF as a second danger input** for each site, including INPE's 0–3-day forecast. Done: INPE now
+     drives `danger` alerts (see [Risk model](risk-model.md#danger-alerts-inpe-first-fma-alongside)).
   2. **Calibrate FMA+ classes per biome** with the percentile method from Eugenio et al. (2020), using each site's
      history of INPE hotspots.
 
@@ -80,7 +80,6 @@ For each site and day, we compared our FMA+ (from Open-Meteo weather) with the *
 
 ```bash
 cd backend
-.venv/bin/pip install -e '.[validation]'          # netCDF4 + numpy
 .venv/bin/python -m app.cli compare-inpe --days 30 --csv data/compare.csv
 ```
 

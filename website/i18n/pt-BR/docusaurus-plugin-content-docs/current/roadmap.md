@@ -16,7 +16,7 @@ title: Roadmap
 
 ## Fase 1: Sem hardware (agora)
 - [x] Validar as constantes da FMA+ com Nunes et al. (2006); comparar com o *Risco de Fogo* do INPE ([resultados](validation.md))
-- [ ] Usar o *Risco de Fogo* do INPE (observado + previsão de 0 a 3 dias) como segunda fonte de perigo por área
+- [x] Usar o *Risco de Fogo* do INPE (observado + previsão de 0 a 3 dias) como segunda fonte de perigo por área
 - [ ] Calibrar as classes da FMA+ por bioma (percentis da FMA+ nos dias com focos do INPE por perto)
 - [ ] Filtro preciso pela fronteira do Brasil e por bioma (IBGE), descartando focos fora do país
 - [ ] Áreas automáticas a partir das unidades de conservação do ICMBio

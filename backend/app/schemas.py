@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
@@ -79,6 +79,21 @@ class DangerOut(BaseModel):
     days_used: int
 
 
+class InpeRiskDay(BaseModel):
+    date: date
+    kind: str  # observed | forecast
+    rf: float
+    rf_max: float
+    risk_class: str
+    label: str
+
+
+class InpeRisk(BaseModel):
+    today: InpeRiskDay | None
+    forecast: list[InpeRiskDay]
+
+
 class OverviewNode(NodeOut):
     last: ReadingOut | None = None
     danger: DangerOut | None = None
+    inpe: InpeRisk | None = None

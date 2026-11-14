@@ -71,8 +71,8 @@ Para cada área e dia, comparamos a nossa FMA+ (com dados do Open-Meteo) com a *
 - Alertas diários de `danger` baseados só na FMA+ vão disparar **com mais frequência do que o INPE indicaria**, e
   podem ficar em silêncio logo depois de uma única chuva forte no meio de uma seca.
 - Próximos passos recomendados (veja o [roadmap](roadmap.md)):
-  1. **Usar o RF do INPE como segunda fonte de perigo** para cada área, incluindo a previsão de 0 a 3 dias do INPE.
-     É gratuito, oficial e já calibrado para o Brasil.
+  1. ✅ **Usar o RF do INPE como segunda fonte de perigo** para cada área, incluindo a previsão de 0 a 3 dias do INPE.
+     Feito: agora o INPE decide os alertas `danger` (veja [Modelo de risco](risk-model.md#alertas-de-perigo-inpe-primeiro-fma-junto)).
   2. **Calibrar as classes da FMA+ por bioma** com o método de percentis de Eugenio et al. (2020), usando o histórico
      de focos do INPE de cada área.
 
@@ -80,7 +80,6 @@ Para cada área e dia, comparamos a nossa FMA+ (com dados do Open-Meteo) com a *
 
 ```bash
 cd backend
-.venv/bin/pip install -e '.[validation]'          # netCDF4 + numpy
 .venv/bin/python -m app.cli compare-inpe --days 30 --csv data/compare.csv
 ```
 
